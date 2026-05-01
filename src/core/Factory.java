@@ -1,3 +1,5 @@
+// interface for building courses
+
 package core;
 
 public interface Factory {

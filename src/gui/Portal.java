@@ -1,3 +1,5 @@
+// swing portal window for basic actions
+
 package gui;
 
 import gui.FileHandler;
@@ -17,6 +19,7 @@ import java.awt.FlowLayout;
 public class Portal extends JFrame implements ActionListener {
     private JButton importButton;
 
+    // constructor
     public Portal() {
         // create window
         super("Grading Portal");
@@ -35,6 +38,7 @@ public class Portal extends JFrame implements ActionListener {
         add(importButton);
     }
 
+    // handle button clicks
     @Override
     public void actionPerformed(ActionEvent e) {
 

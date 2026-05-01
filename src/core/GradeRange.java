@@ -1,3 +1,5 @@
+// grade range class for one letter bucket
+
 package core;
 
 
@@ -6,12 +8,14 @@ public class GradeRange {
     private double minPercent;
     private double maxPercent;
 
+    // constructor
     public GradeRange(String letter, double min, double max) {
         this.letter = letter;
         this.minPercent = min;
         this.maxPercent = max;
     }
 
+    // update min and max for this range
     public void setRange(double min, double max) {
         this.minPercent = min;
         this.maxPercent = max;

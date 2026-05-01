@@ -1,3 +1,5 @@
+// student class for identity and grade data
+
 package core;
 
 import java.util.HashMap;
@@ -13,6 +15,7 @@ public class Student {
     protected double finalPercent;
     protected String letterGrade;
 
+    // constructor with empty score map
     public Student(String studentId, String name, String email) {
         this.studentId = studentId;
         this.name = name;
@@ -21,6 +24,7 @@ public class Student {
         this.scores = new HashMap<String, Double>();
     }
 
+    // constructor with a provided score map
     public Student(String studentId, String name, String email, HashMap<String, Double> scores) {
         this.studentId = studentId;
         this.name = name;
@@ -33,6 +37,7 @@ public class Student {
         }
     }
 
+    // set one assignment score
     public void setScore(String assignmentName, double score) {
         scores.put(assignmentName, score);
     }

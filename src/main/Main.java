@@ -10,5 +10,5 @@ public class Main {
 
         new Portal().setVisible(true);
 
-    }    
+    }
 }

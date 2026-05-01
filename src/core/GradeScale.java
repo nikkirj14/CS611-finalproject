@@ -1,3 +1,5 @@
+// grade scale class for letter grade boundaries
+
 package core;
 
 import java.util.ArrayList;
@@ -18,10 +20,12 @@ public class GradeScale {
 
     protected ArrayList<GradeRange> ranges;
 
+    // constructor
     public GradeScale() {
         loadDefaultScale();
     }
 
+    // load default letter ranges
     public void loadDefaultScale() {
         this.ranges = new ArrayList<GradeRange>(Arrays.asList(
                 new GradeRange(LETTER_A_PLUS, 97, 100),
@@ -37,6 +41,7 @@ public class GradeScale {
                 new GradeRange(LETTER_F, 0, 60)));
     }
 
+    // shift all ranges so top score maps to 100
     public void shiftToTopScore(double topScore) {
         double dif = 100 - topScore;
         for (GradeRange r : ranges) {
@@ -44,16 +49,18 @@ public class GradeScale {
         }
     }
 
+    // reset ranges to defaults
     public void resetToDefault() {
         loadDefaultScale();
     }
 
+    // get letter grade based on a percent
     public String getLetter(double percent) {
         if (ranges == null || ranges.isEmpty()) {
             return null;
         }
-        // top bucket uses max 100; "max exclusive" rule would miss a perfect score
-        if (percent == 100) {
+        // if score is at or above the top boundary, return top letter
+        if (percent == 100 || percent > ranges.get(0).getMax()) {
             return ranges.get(0).getLetter();
         }
         for (GradeRange r : ranges) {

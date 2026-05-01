@@ -1,3 +1,5 @@
+// course class for assignments, students, and grade scale
+
 package core;
 
 import java.util.ArrayList;
@@ -9,6 +11,7 @@ public class Course {
     protected ArrayList<Student> students;
     protected GradeScale gradeScale;
 
+    // constructor
     public Course(String name, String id) {
         this.courseName = name;
         this.courseId = id;
@@ -17,6 +20,7 @@ public class Course {
         this.gradeScale = new GradeScale();
     }
 
+    // add one assignment
     public void addAssignment(Assignment a) {
         if (a == null) {
             return;
@@ -24,6 +28,7 @@ public class Course {
         assignments.add(a);
     }
 
+    // add one student
     public void addStudent(Student s) {
         if (s == null) {
             return;
@@ -31,6 +36,7 @@ public class Course {
         students.add(s);
     }
 
+    // copy assignment setup from another course
     public void copyAssignmentSetupFrom(Course other) {
         if (other == null) {
             return;
@@ -38,6 +44,7 @@ public class Course {
         this.assignments = other.assignments;
     }
 
+    // get only active students
     public ArrayList<Student> getActiveStudents() {
         ArrayList<Student> active = new ArrayList<Student>();
         if (students == null) {
@@ -79,6 +86,7 @@ public class Course {
         return gradeScale;
     }
 
+    // set a grade scale
     public void setGradeScale(GradeScale gradeScale) {
         if (gradeScale != null) {
             this.gradeScale = gradeScale;

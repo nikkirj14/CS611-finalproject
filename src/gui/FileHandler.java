@@ -1,3 +1,5 @@
+// file helper for csv import flow
+
 package gui;
 
 import java.io.BufferedReader;
@@ -15,10 +17,9 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 
 import core.Student;
 
-
 public class FileHandler {
-    
 
+    // import a csv file
     public File importFile(Portal frame) {
 
         JFileChooser fileChooser = new JFileChooser();
@@ -39,10 +40,11 @@ public class FileHandler {
             return file;
 
         }
-        
+
         return null;
     }
 
+    // parse students and scores from csv
     public List<Student> parseScores(File file) {
         List<Student> students = new ArrayList<>();
 
@@ -59,14 +61,14 @@ public class FileHandler {
             while ((line = reader.readLine()) != null) {
                 String[] parts = line.split(",");
 
-                if (parts.length < 2) continue; // basic safety check
+                if (parts.length < 2)
+                    continue; // basic safety check
 
                 String id = parts[0].trim();
                 String name = parts[1].trim();
-                String email  = parts[2].trim();
+                String email = parts[2].trim();
 
                 HashMap<String, Double> scores = new HashMap<>();
-
 
                 for (int i = 3; i < parts.length; i++) {
                     String columnName = headers[i].trim();
@@ -91,7 +93,4 @@ public class FileHandler {
         return students;
     }
 
-
-
-    
 }
