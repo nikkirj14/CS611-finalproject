@@ -1,12 +1,22 @@
 package core;
 
-
 import java.util.ArrayList;
 import java.util.Arrays;
 
 public class GradeScale {
-    protected ArrayList<GradeRange> ranges;
+    public static final String LETTER_A_PLUS = "A+";
+    public static final String LETTER_A = "A";
+    public static final String LETTER_A_MINUS = "A-";
+    public static final String LETTER_B_PLUS = "B+";
+    public static final String LETTER_B = "B";
+    public static final String LETTER_B_MINUS = "B-";
+    public static final String LETTER_C_PLUS = "C+";
+    public static final String LETTER_C = "C";
+    public static final String LETTER_C_MINUS = "C-";
+    public static final String LETTER_D = "D";
+    public static final String LETTER_F = "F";
 
+    protected ArrayList<GradeRange> ranges;
 
     public GradeScale() {
         loadDefaultScale();
@@ -14,22 +24,19 @@ public class GradeScale {
 
     public void loadDefaultScale() {
         this.ranges = new ArrayList<GradeRange>(Arrays.asList(
-            new GradeRange("A+", 97, 100),
-            new GradeRange("A", 93, 97),
-            new GradeRange("A-", 90, 93),
-            new GradeRange("B+", 87, 90),
-            new GradeRange("B", 83, 87),
-            new GradeRange("B-", 80, 83),
-            new GradeRange("C+", 77, 80),
-            new GradeRange("C", 73, 77),
-            new GradeRange("C-", 70, 73),
-            new GradeRange("D+", 67, 70),
-            new GradeRange("D", 63, 67),
-            new GradeRange("D-", 60, 63),
-            new GradeRange("F", 0, 60)
-        ));
+                new GradeRange(LETTER_A_PLUS, 97, 100),
+                new GradeRange(LETTER_A, 93, 97),
+                new GradeRange(LETTER_A_MINUS, 90, 93),
+                new GradeRange(LETTER_B_PLUS, 87, 90),
+                new GradeRange(LETTER_B, 83, 87),
+                new GradeRange(LETTER_B_MINUS, 80, 83),
+                new GradeRange(LETTER_C_PLUS, 77, 80),
+                new GradeRange(LETTER_C, 73, 77),
+                new GradeRange(LETTER_C_MINUS, 70, 73),
+                new GradeRange(LETTER_D, 60, 70),
+                new GradeRange(LETTER_F, 0, 60)));
     }
-    
+
     public void shiftToTopScore(double topScore) {
         double dif = 100 - topScore;
         for (GradeRange r : ranges) {
@@ -42,12 +49,23 @@ public class GradeScale {
     }
 
     public String getLetter(double percent) {
+        if (ranges == null || ranges.isEmpty()) {
+            return null;
+        }
+        // top bucket uses max 100; "max exclusive" rule would miss a perfect score
+        if (percent == 100) {
+            return ranges.get(0).getLetter();
+        }
         for (GradeRange r : ranges) {
             if ((r.getMax() > percent) && (r.getMin() <= percent)) {
-                return r.letter;
+                return r.getLetter();
             }
         }
         return null;
+    }
+
+    public ArrayList<GradeRange> getRanges() {
+        return ranges;
     }
 
 }

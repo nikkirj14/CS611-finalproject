@@ -1,12 +1,10 @@
 package core;
 
 
-import java.util.ArrayList;
-
 public class GradeRange {
-    protected String letter;
-    protected double minPercent;
-    protected double maxPercent;
+    private String letter;
+    private double minPercent;
+    private double maxPercent;
 
     public GradeRange(String letter, double min, double max) {
         this.letter = letter;
@@ -25,5 +23,9 @@ public class GradeRange {
 
     public double getMax() {
         return maxPercent;
+    }
+
+    public String getLetter() {
+        return letter;
     }
 }
