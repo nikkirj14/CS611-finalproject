@@ -14,6 +14,13 @@ public class Assignment {
         this.maxPoints = 100;
     }
 
+    public Assignment(String name, double weight, double maxPoints, String note) {
+        this.name = name;
+        this.weight = weight;
+        this.maxPoints = maxPoints;
+        this.note = note;
+    }
+
     // constructor with custom max points
     public Assignment(String name, int maxPoints) {
         this.name = name;
@@ -23,6 +30,22 @@ public class Assignment {
     // set assignment weight
     public void setWeight(double weight) {
         this.weight = weight;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public double getWeight() {
+        return weight;
+    }
+
+    public double getMaxPoints() {
+        return maxPoints;
+    }
+
+    public String getNote() {
+        return note;
     }
 
 }

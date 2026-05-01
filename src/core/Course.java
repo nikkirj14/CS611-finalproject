@@ -5,8 +5,8 @@ package core;
 import java.util.ArrayList;
 
 public class Course {
-    protected String courseName;
     protected String courseId;
+    protected String courseName;
     protected ArrayList<Assignment> assignments;
     protected ArrayList<Student> students;
     protected GradeScale gradeScale;
@@ -15,12 +15,19 @@ public class Course {
     public Course(String name, String id) {
         this.courseName = name;
         this.courseId = id;
-        this.assignments = new ArrayList<Assignment>();
-        this.students = new ArrayList<Student>();
         this.gradeScale = new GradeScale();
+        this.assignments = new ArrayList<>();
+        this.students = new ArrayList<>();
     }
 
-    // add one assignment
+    public Course(String name, String id, ArrayList<Assignment> assignments) {
+        this.courseName = name;
+        this.courseId = id;
+        this.assignments = assignments;
+        this.gradeScale = new GradeScale();
+        this.students = new ArrayList<>();
+    }
+    
     public void addAssignment(Assignment a) {
         if (a == null) {
             return;
@@ -92,4 +99,5 @@ public class Course {
             this.gradeScale = gradeScale;
         }
     }
+  
 }

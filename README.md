@@ -1,4 +1,6 @@
 # CS611-finalproject
 
-1. `cd CS611-finalproject`
-2. `./run.sh`
+Run project with or without csv with stored data
+
+./src/main/run.sh
+./src/main/run.sh StoredData.csv

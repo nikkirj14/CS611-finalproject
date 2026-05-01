@@ -1,0 +1,10 @@
+courseId,courseName,assignmentName,weight,maxPoints,note
+CS611,Introduction to Software Engineering,Assignment 1,20.0,100.0,
+CS611,Introduction to Software Engineering,Assignment 2,20.0,100.0,
+CS611,Introduction to Software Engineering,Midterm,25.0,100.0,
+CS611,Introduction to Software Engineering,Final,35.0,100.0,
+CS630,Data Structures,Homework 1,10.0,100.0,
+CS630,Data Structures,Homework 2,10.0,100.0,
+CS630,Data Structures,Homework 3,10.0,100.0,
+CS630,Data Structures,Midterm,30.0,100.0,
+CS630,Data Structures,Final,40.0,100.0,

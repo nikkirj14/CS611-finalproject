@@ -1,4 +1,4 @@
-id, name, email, Assignment 1, Assignment 2, Midterm, Final
-1, John Doe, john.doe@example.com, 85.0, 90.0, 88.0, 92.0
-2, Jane Smith, jane.smith@example.com, 92.0, 88.0, 90.0, 85.0
-3, Bob Johnson, bob.johnson@example.com, 88.0, 92.0, 85.0, 90.0
+id,name,email,Assignment 1,Assignment 2,Midterm,Final
+1,John Doe,john.doe@example.com,85.0,90.0,88.0,92.0
+2,Jane Smith,jane.smith@example.com,92.0,88.0,90.0,85.0
+3,Bob Johnson,bob.johnson@example.com,88.0,92.0,85.0,90.0
