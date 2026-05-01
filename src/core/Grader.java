@@ -96,4 +96,36 @@ public class Grader {
         }
         return updatedCount;
     }
+
+    // shift grade ranges based on top active student and reassign letters
+    public boolean applyTopScoreShift(Course course) {
+        if (course == null || course.getGradeScale() == null) {
+            return false;
+        }
+
+        calculateFinalPercentsForCourse(course);
+        double topActivePercent = getTopActiveFinalPercent(course);
+        if (topActivePercent < 0) {
+            return false;
+        }
+
+        course.getGradeScale().shiftToTopScore(topActivePercent);
+        assignLetterGradesForCourse(course);
+        return true;
+    }
+
+    // get the highest final percent among active students
+    public double getTopActiveFinalPercent(Course course) {
+        if (course == null) {
+            return -1.0;
+        }
+
+        double topPercent = -1.0;
+        for (Student student : course.getActiveStudents()) {
+            if (student.getFinalPercent() > topPercent) {
+                topPercent = student.getFinalPercent();
+            }
+        }
+        return topPercent;
+    }
 }
