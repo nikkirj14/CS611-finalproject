@@ -61,4 +61,39 @@ public class Grader {
         }
         return totalWeight;
     }
+
+    // assign one student's letter grade from final percent
+    public String assignLetterGrade(Student student, Course course) {
+        if (student == null || course == null || course.getGradeScale() == null) {
+            return null;
+        }
+
+        double boundedPercent = student.getFinalPercent();
+        if (boundedPercent < 0) {
+            boundedPercent = 0;
+        } else if (boundedPercent > 100) {
+            boundedPercent = 100;
+        }
+
+        String letter = course.getGradeScale().getLetter(boundedPercent);
+        student.setLetterGrade(letter);
+        return letter;
+    }
+
+    // assign letter grades for all students in a course
+    // return the number of students updated
+    public int assignLetterGradesForCourse(Course course) {
+        if (course == null || course.students == null || course.students.isEmpty()) {
+            return 0;
+        }
+
+        int updatedCount = 0;
+        for (Student student : course.students) {
+            String letter = assignLetterGrade(student, course);
+            if (letter != null) {
+                updatedCount++;
+            }
+        }
+        return updatedCount;
+    }
 }
