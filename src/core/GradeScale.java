@@ -19,10 +19,32 @@ public class GradeScale {
     public static final String LETTER_F = "F";
 
     protected ArrayList<GradeRange> ranges;
+    protected ArrayList<GradeScaleObserver> observers;
 
     // constructor
     public GradeScale() {
+        this.observers = new ArrayList<GradeScaleObserver>();
         loadDefaultScale();
+    }
+
+    // add a listener for boundary changes
+    public void addObserver(GradeScaleObserver observer) {
+        if (observer == null) {
+            return;
+        }
+        observers.add(observer);
+    }
+
+    // remove a listener
+    public void removeObserver(GradeScaleObserver observer) {
+        observers.remove(observer);
+    }
+
+    // tell all listeners the scale changed
+    private void notifyObservers() {
+        for (int i = 0; i < observers.size(); i++) {
+            observers.get(i).gradeScaleChanged();
+        }
     }
 
     // load default letter ranges
@@ -47,11 +69,13 @@ public class GradeScale {
         for (GradeRange r : ranges) {
             r.setRange(r.getMin() - dif, r.getMax() - dif);
         }
+        notifyObservers();
     }
 
     // reset ranges to defaults
     public void resetToDefault() {
         loadDefaultScale();
+        notifyObservers();
     }
 
     // get letter grade based on a percent
@@ -89,6 +113,7 @@ public class GradeScale {
             range.setRange(oldMin, oldMax);
             return false;
         }
+        notifyObservers();
         return true;
     }
 
