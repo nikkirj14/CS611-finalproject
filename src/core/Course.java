@@ -45,10 +45,12 @@ public class Course {
 
     // copy assignment setup from another course
     public void copyAssignmentSetupFrom(Course other) {
-        if (other == null) {
-            return;
+        
+        for (Assignment a : other.assignments) {
+            Assignment copy = new Assignment(a.name, a.weight, a.maxPoints, a.note);
+            addAssignment(copy);
         }
-        this.assignments = other.assignments;
+        
     }
 
     // get only active students
