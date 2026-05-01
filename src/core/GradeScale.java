@@ -71,6 +71,69 @@ public class GradeScale {
         return null;
     }
 
+    // update one letter range and validate the full scale
+    public boolean updateRange(String letter, double newMin, double newMax) {
+        GradeRange range = getRangeByLetter(letter);
+        if (range == null) {
+            return false;
+        }
+        if (newMin > newMax) {
+            return false;
+        }
+
+        double oldMin = range.getMin();
+        double oldMax = range.getMax();
+        range.setRange(newMin, newMax);
+
+        if (!isValidScale()) {
+            range.setRange(oldMin, oldMax);
+            return false;
+        }
+        return true;
+    }
+
+    // check if ranges stay ordered and not overlapping
+    public boolean isValidScale() {
+        if (ranges == null || ranges.isEmpty()) {
+            return false;
+        }
+
+        for (int i = 0; i < ranges.size(); i++) {
+            GradeRange current = ranges.get(i);
+            if (current.getMin() > current.getMax()) {
+                return false;
+            }
+
+            if (i > 0) {
+                GradeRange previous = ranges.get(i - 1);
+                if (previous.getMin() < current.getMin()) {
+                    return false;
+                }
+                if (previous.getMax() < current.getMax()) {
+                    return false;
+                }
+                if (previous.getMin() < current.getMax()) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    // find a range by letter
+    public GradeRange getRangeByLetter(String letter) {
+        if (letter == null || ranges == null) {
+            return null;
+        }
+
+        for (GradeRange range : ranges) {
+            if (letter.equals(range.getLetter())) {
+                return range;
+            }
+        }
+        return null;
+    }
+
     public ArrayList<GradeRange> getRanges() {
         return ranges;
     }
