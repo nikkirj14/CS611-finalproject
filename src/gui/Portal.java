@@ -22,9 +22,18 @@ import java.awt.FlowLayout;
 import java.awt.Font;
 
 public class Portal extends JFrame implements ActionListener {
+    private JButton addCourseButton;
+    private JButton coursesButton;
     private JButton importButton;
+
     private CourseManager courseManager;
-    private JPanel courseDisplay;
+    private JTextArea courseDisplay;
+
+    private JPanel addCoursePanel;
+    private JPanel centerPanel;
+
+    private JTextField courseNameField;
+    private JTextField courseIdField;
     private Course currentCourse;
 
     public Portal(CourseManager c) {
@@ -35,37 +44,62 @@ public class Portal extends JFrame implements ActionListener {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); // close app when you click X 
         setLayout(new BorderLayout());
 
-        courseDisplay = new JPanel();
-        courseDisplay.setLayout(new BoxLayout(courseDisplay, BoxLayout.Y_AXIS) );
-        add(new JScrollPane(courseDisplay), BorderLayout.CENTER);
-
-        // create button
+        // top panel
         JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
 
-        JButton coursesButton = new JButton("Course v");
+        coursesButton = new JButton("Courses ▾");
         coursesButton.addActionListener(this);
 
-        importButton = new JButton("Import Grades");
-        importButton.addActionListener(this);
+        addCourseButton = new JButton("Add Course");
+        addCourseButton.addActionListener(this);
 
         topPanel.add(coursesButton);
-        topPanel.add(importButton);
+        topPanel.add(addCourseButton);
 
         add(topPanel, BorderLayout.NORTH);
 
-        // coursesButton.addActionListener(ev -> {showCourse(c);});
-        // add(coursesButton);
 
-        // // create button
-        // importButton = new JButton("Import Grades");
-        // importButton.addActionListener(this);
-        // importButton.setBackground(Color.BLACK);
-        // importButton.setHorizontalAlignment(SwingConstants.LEFT);
-        // importButton.setVerticalAlignment(SwingConstants.TOP);
-        // importButton.setBounds(100, 50, 150, 50);
-        // importButton.setBorder(BorderFactory.createEtchedBorder());
-        // setLayout(new FlowLayout(FlowLayout.LEFT));
-        // add(importButton);
+        // center
+        centerPanel = new JPanel(new BorderLayout());
+        courseDisplay = new JTextArea();
+        courseDisplay.setEditable(false);
+
+        centerPanel.add(new JScrollPane(courseDisplay), BorderLayout.CENTER);
+
+        add(centerPanel, BorderLayout.CENTER);
+
+        importButton = new JButton("Import Grades");
+        importButton.addActionListener(this);
+        importButton.setPreferredSize(new Dimension(140, 25));
+        importButton.setVisible(false); // hidden initially
+
+        centerPanel.add(importButton);
+
+        add(centerPanel, BorderLayout.CENTER);
+
+        // course name input fields
+        addCoursePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+
+        courseNameField = new JTextField(15);
+        courseIdField = new JTextField(15);
+
+        JButton submitButton = new JButton("Submit");
+
+        submitButton.addActionListener(e -> handleInitCourse());
+
+        addCoursePanel.add(new JLabel("Course Name:"));
+        addCoursePanel.add(courseNameField);
+
+        addCoursePanel.add(new JLabel("Course ID:"));
+        addCoursePanel.add(courseIdField);
+
+        addCoursePanel.add(submitButton);
+
+        addCoursePanel.setVisible(false);
+
+        add(addCoursePanel, BorderLayout.SOUTH);
+
+        setVisible(true);
 
         refreshCourseList();
 
@@ -75,29 +109,31 @@ public class Portal extends JFrame implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
 
-    if (e.getActionCommand().equals("Import Grades")) {
-        if (currentCourse == null) {
-            JOptionPane.showMessageDialog(this, "Please open a course first.");
-            return;
+        if (e.getActionCommand().equals("Import Grades")) {
+            // if (currentCourse == null) {
+            //     JOptionPane.showMessageDialog(this, "Please open a course first.");
+            //     return;
+            // }
+            FileHandler f = new FileHandler();
+            File file = f.importFile(this);
+            if (file == null) return;
+            List<Student> students = f.parseScores(file);
+                
+            System.out.println("Parsed " + students.size() + " students from the file.");
+            displayCourseStats(students);
+            
+            // for (Student s : students) {
+            //     currentCourse.addStudent(s);
+            // }
+            
+            // Grader grader = new Grader();
+            // grader.calculateFinalPercentsForCourse(currentCourse);
+            // grader.assignLetterGradesForCourse(currentCourse);
+            
+            // showCourseView(currentCourse);
         }
-        FileHandler f = new FileHandler();
-        File file = f.importFile(this);
-        if (file == null) return;
-        
-        List<Student> students = f.parseScores(file);
-        for (Student s : students) {
-            currentCourse.addStudent(s);
-        }
-        
-        Grader grader = new Grader();
-        grader.calculateFinalPercentsForCourse(currentCourse);
-        grader.assignLetterGradesForCourse(currentCourse);
-        
-        showCourseView(currentCourse);
-    }
 
-
-        if (e.getActionCommand().equals("Course v")) {
+        if (e.getActionCommand().equals("Courses ▾")) {
             JPopupMenu popupMenu = new JPopupMenu();
             List<Course> courses = courseManager.getCourses();
             if (courses != null) {
@@ -113,32 +149,14 @@ public class Portal extends JFrame implements ActionListener {
             } 
             popupMenu.show(this, 100, 50);
         }
+
+        if (e.getActionCommand().equals("Add Course")) {
+            addCoursePanel.setVisible(true);
+            revalidate();
+            repaint();
+        }
         
     }
-
-    // private void showCourseData(Course course) {
-
-    //     StringBuilder sb = new StringBuilder();
-
-    //     sb.append("Course ID: ").append(course.getCourseId()).append("\n");
-    //     sb.append("Course Name: ").append(course.getCourseName()).append("\n\n");
-
-    //     sb.append("Assignments:\n");
-
-    //     for (Assignment a : course.getAssignments()) {
-    //         sb.append("- ")
-    //         .append(a.getName())
-    //         .append(" (weight: ")
-    //         .append(a.getWeight())
-    //         .append(", max: ")
-    //         .append(a.getMaxPoints())
-    //         .append(")\n");
-    //     }
-
-    //     courseDisplay.add(new JLabel(sb.toString()));
-    //     courseDisplay.revalidate();
-    //     courseDisplay.repaint();
-    // }
 
 
 
@@ -213,4 +231,52 @@ public class Portal extends JFrame implements ActionListener {
     courseDisplay.revalidate();
     courseDisplay.repaint();
     }
+
+    private void handleInitCourse() {
+        String courseName = courseNameField.getText().trim();
+        String courseId = courseIdField.getText().trim();
+
+        if (courseName.isEmpty() || courseId.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Please enter both Course Name and ID");
+            return;
+        }
+
+        Course newCourse = new Course(courseName, courseId);
+        courseManager.addCourse(newCourse);
+
+        System.out.println("Added course: " + courseName + " (" + courseId + ")");
+
+        // reset UI
+        courseNameField.setText("");
+        courseIdField.setText("");
+
+        addCoursePanel.setVisible(false);
+        importButton.setVisible(true);
+
+        revalidate();
+        repaint();
+    }
+
+    private void displayCourseStats(List<Student> students) {
+        
+        String[] columnNames = {"Name", "Grade"};
+        Object[][] data = new Object[students.size()][2];
+        for (int i = 0; i < students.size(); i++) {
+            Student s = students.get(i);
+            data[i][0] = s.getName();
+            data[i][1] = s.getFinalPercent(); //calculateFinalPercentForStudent(s);
+        }
+
+            JTable table = new JTable(data, columnNames);
+            JScrollPane scrollPane = new JScrollPane(table);
+
+            
+            centerPanel.removeAll(); 
+
+            centerPanel.add(scrollPane, BorderLayout.CENTER);
+
+            centerPanel.revalidate();
+            centerPanel.repaint();
+    }
+
 }

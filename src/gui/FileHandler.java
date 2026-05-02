@@ -29,6 +29,7 @@ public class FileHandler {
         JFileChooser fileChooser = new JFileChooser();
         fileChooser.setFileFilter(new FileNameExtensionFilter("CSV Files", "csv"));
         fileChooser.setAcceptAllFileFilterUsed(false);
+        fileChooser.setCurrentDirectory(new File("."));
         fileChooser.rescanCurrentDirectory();
         int result = fileChooser.showOpenDialog(frame);// opens dialog
 
