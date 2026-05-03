@@ -9,11 +9,12 @@ import core.Student;
 import core.Assignment;
 import core.Course;
 import core.CourseManager;
-import core.Grader;
+import core.ScaleLetterRefresh;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.util.HashSet;
 import java.util.List;
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -36,10 +37,15 @@ public class Portal extends JFrame implements ActionListener {
     private JTextField courseIdField;
     private Course currentCourse;
 
+    private Grader grader;
+    private HashSet<Course> scaleLetterRefreshDone;
+
     public Portal(CourseManager c) {
         // create window
         super("Grading Portal");
         this.courseManager = c;
+        this.grader = new Grader();
+        this.scaleLetterRefreshDone = new HashSet<Course>();
         setSize(1200, 800);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); // close app when you click X 
         setLayout(new BorderLayout());
@@ -187,6 +193,7 @@ public class Portal extends JFrame implements ActionListener {
     // method to show course details and student scores in a table
     private void showCourseView(Course course) {
     this.currentCourse = course;
+    ensureScaleLetterRefresh(course);
     courseDisplay.removeAll();
     courseDisplay.setLayout(new BorderLayout());
 
@@ -230,6 +237,18 @@ public class Portal extends JFrame implements ActionListener {
 
     courseDisplay.revalidate();
     courseDisplay.repaint();
+    }
+
+    // connect scale changes to letter grades once per course instance
+    private void ensureScaleLetterRefresh(Course course) {
+        if (course == null) {
+            return;
+        }
+        if (scaleLetterRefreshDone.contains(course)) {
+            return;
+        }
+        ScaleLetterRefresh.attach(course, grader);
+        scaleLetterRefreshDone.add(course);
     }
 
     private void handleInitCourse() {
