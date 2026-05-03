@@ -1,5 +1,4 @@
 // swing portal window for basic actions
-
 package gui;
 
 import gui.FileHandler;
@@ -9,7 +8,7 @@ import core.Student;
 import core.Assignment;
 import core.Course;
 import core.CourseManager;
-import core.ScaleLetterRefresh;
+import core.GradeRange;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -17,10 +16,8 @@ import java.io.File;
 import java.util.HashSet;
 import java.util.List;
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
-import java.awt.Font;
 
 public class Portal extends JFrame implements ActionListener {
     private JButton addCourseButton;
@@ -28,7 +25,7 @@ public class Portal extends JFrame implements ActionListener {
     private JButton importButton;
 
     private CourseManager courseManager;
-    private JTextArea courseDisplay;
+    private JPanel courseDisplay;
 
     private JPanel addCoursePanel;
     private JPanel centerPanel;
@@ -41,19 +38,18 @@ public class Portal extends JFrame implements ActionListener {
     private HashSet<Course> scaleLetterRefreshDone;
 
     public Portal(CourseManager c) {
-        // create window
         super("Grading Portal");
         this.courseManager = c;
         this.grader = new Grader();
         this.scaleLetterRefreshDone = new HashSet<Course>();
         setSize(1200, 800);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); // close app when you click X 
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
 
         // top panel
         JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
 
-        coursesButton = new JButton("Courses ▾");
+        coursesButton = new JButton("Courses ");
         coursesButton.addActionListener(this);
 
         addCourseButton = new JButton("Add Course");
@@ -64,112 +60,93 @@ public class Portal extends JFrame implements ActionListener {
 
         add(topPanel, BorderLayout.NORTH);
 
-
-        // center
+        // center panel
         centerPanel = new JPanel(new BorderLayout());
-        courseDisplay = new JTextArea();
-        courseDisplay.setEditable(false);
+        courseDisplay = new JPanel();
+        courseDisplay.setLayout(new BoxLayout(courseDisplay, BoxLayout.Y_AXIS));
 
         centerPanel.add(new JScrollPane(courseDisplay), BorderLayout.CENTER);
-
         add(centerPanel, BorderLayout.CENTER);
 
         importButton = new JButton("Import Grades");
         importButton.addActionListener(this);
         importButton.setPreferredSize(new Dimension(140, 25));
-        importButton.setVisible(false); // hidden initially
-
+        importButton.setVisible(false);
         centerPanel.add(importButton);
 
-        add(centerPanel, BorderLayout.CENTER);
-
-        // course name input fields
+        // add course panel (bottom)
         addCoursePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-
         courseNameField = new JTextField(15);
         courseIdField = new JTextField(15);
-
         JButton submitButton = new JButton("Submit");
-
         submitButton.addActionListener(e -> handleInitCourse());
 
         addCoursePanel.add(new JLabel("Course Name:"));
         addCoursePanel.add(courseNameField);
-
         addCoursePanel.add(new JLabel("Course ID:"));
         addCoursePanel.add(courseIdField);
-
         addCoursePanel.add(submitButton);
-
         addCoursePanel.setVisible(false);
 
         add(addCoursePanel, BorderLayout.SOUTH);
 
         setVisible(true);
-
         refreshCourseList();
-
     }
 
-    // handle button clicks
     @Override
     public void actionPerformed(ActionEvent e) {
 
+        // import grades into current course
         if (e.getActionCommand().equals("Import Grades")) {
-            // if (currentCourse == null) {
-            //     JOptionPane.showMessageDialog(this, "Please open a course first.");
-            //     return;
-            // }
+            if (currentCourse == null) {
+                JOptionPane.showMessageDialog(this, "Please open a course first.");
+                return;
+            }
             FileHandler f = new FileHandler();
             File file = f.importFile(this);
-            if (file == null) return;
+            if (file == null)
+                return;
+
             List<Student> students = f.parseScores(file);
-                
-            System.out.println("Parsed " + students.size() + " students from the file.");
-            displayCourseStats(students);
-            
-            // for (Student s : students) {
-            //     currentCourse.addStudent(s);
-            // }
-            
-            // Grader grader = new Grader();
-            // grader.calculateFinalPercentsForCourse(currentCourse);
-            // grader.assignLetterGradesForCourse(currentCourse);
-            
-            // showCourseView(currentCourse);
+            for (Student s : students) {
+                currentCourse.addStudent(s);
+            }
+
+            grader.calculateFinalPercentsForCourse(currentCourse);
+            grader.assignLetterGradesForCourse(currentCourse);
+
+            showCourseView(currentCourse);
         }
 
-        if (e.getActionCommand().equals("Courses ▾")) {
+        // show course dropdown
+        if (e.getActionCommand().equals("Courses v")) {
             JPopupMenu popupMenu = new JPopupMenu();
             List<Course> courses = courseManager.getCourses();
             if (courses != null) {
                 for (Course c : courses) {
                     JMenuItem item = new JMenuItem(c.getCourseId());
-
-                    item.addActionListener(ev -> {
-                        showCourseView(c); 
-                    });
-
+                    item.addActionListener(ev -> showCourseView(c));
                     popupMenu.add(item);
                 }
-            } 
+            }
             popupMenu.show(this, 100, 50);
         }
 
+        // show add course panel
         if (e.getActionCommand().equals("Add Course")) {
             addCoursePanel.setVisible(true);
             revalidate();
             repaint();
         }
-        
     }
 
-
-
-    // method to refresh and update the course list display in home view
+    // refresh the course list on the home screen
     private void refreshCourseList() {
-        courseDisplay.removeAll();
-        courseDisplay.setLayout(new BoxLayout(courseDisplay, BoxLayout.Y_AXIS));
+        centerPanel.removeAll();
+
+        JPanel listPanel = new JPanel();
+        listPanel.setLayout(new BoxLayout(listPanel, BoxLayout.Y_AXIS));
 
         List<Course> courses = courseManager.getCourses();
         for (Course c : courses) {
@@ -183,74 +160,269 @@ public class Portal extends JFrame implements ActionListener {
 
             row.add(label, BorderLayout.WEST);
             row.add(openBtn, BorderLayout.EAST);
-            courseDisplay.add(row);
+            listPanel.add(row);
         }
 
-        courseDisplay.revalidate();
-        courseDisplay.repaint();
+        centerPanel.add(new JScrollPane(listPanel), BorderLayout.CENTER);
+        centerPanel.revalidate();
+        centerPanel.repaint();
     }
 
-    // method to show course details and student scores in a table
+    // show course detail view with student grade table
     private void showCourseView(Course course) {
-    this.currentCourse = course;
-    ensureScaleLetterRefresh(course);
-    courseDisplay.removeAll();
-    courseDisplay.setLayout(new BorderLayout());
+        this.currentCourse = course;
+        ensureScaleLetterRefresh(course);
+        courseDisplay.removeAll();
+        courseDisplay.setLayout(new BorderLayout());
 
-    // back button at top
-    JButton backBtn = new JButton("Back");
-    backBtn.addActionListener(ev -> {
-        courseDisplay.setLayout(new BoxLayout(courseDisplay, BoxLayout.Y_AXIS));
-        refreshCourseList();
-    });
-    JPanel topBar = new JPanel(new FlowLayout(FlowLayout.LEFT));
-    topBar.add(backBtn);
-    topBar.add(new JLabel("  " + course.getCourseId() + " - " + course.getCourseName()));
-    courseDisplay.add(topBar, BorderLayout.NORTH);
+        // top bar
+        JButton backBtn = new JButton("Back");
+        backBtn.addActionListener(ev -> {
+            courseDisplay.setLayout(new BoxLayout(courseDisplay, BoxLayout.Y_AXIS));
+            refreshCourseList();
+        });
 
-    // build column headers
-    List<Assignment> assignments = course.getAssignments();
-    String[] columns = new String[assignments.size() + 3];
-    columns[0] = "Student";
-    for (int i = 0; i < assignments.size(); i++) {
-        columns[i + 1] = assignments.get(i).getName();
-    }
-    columns[columns.length - 2] = "Final %";
-    columns[columns.length - 1] = "Grade";
+        JPanel topBar = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        topBar.add(backBtn);
+        topBar.add(new JLabel("  " + course.getCourseId() + " - " + course.getCourseName()));
 
-    // build rows from active students
-    List<Student> students = course.getActiveStudents();
-    Object[][] data = new Object[students.size()][columns.length];
-    for (int i = 0; i < students.size(); i++) {
-        Student s = students.get(i);
-        data[i][0] = s.getName();
-        for (int j = 0; j < assignments.size(); j++) {
-            data[i][j + 1] = s.getScore(assignments.get(j).getName());
+        // edit course dropdown
+        JButton editBtn = new JButton("Edit Course");
+        editBtn.addActionListener(ev -> {
+            JPopupMenu editMenu = new JPopupMenu();
+
+            JMenuItem importGrades = new JMenuItem("Import Grades");
+            JMenuItem addAssignment = new JMenuItem("Add Assignment");
+            JMenuItem removeAssignment = new JMenuItem("Remove Assignment");
+            JMenuItem adjustWeights = new JMenuItem("Adjust Weights");
+            JMenuItem adjustBoundaries = new JMenuItem("Adjust Grade Boundaries");
+            JMenuItem markInactive = new JMenuItem("Mark Student Inactive");
+            JMenuItem removeCourse = new JMenuItem("Remove Course");
+
+            importGrades.addActionListener(e -> {
+                FileHandler f = new FileHandler();
+                File file = f.importFile(this);
+                if (file == null)
+                    return;
+                List<Student> students = f.parseScores(file);
+                for (Student s : students)
+                    course.addStudent(s);
+                grader.calculateFinalPercentsForCourse(course);
+                grader.assignLetterGradesForCourse(course);
+                showCourseView(course);
+            });
+
+            addAssignment.addActionListener(e -> addAssignment(course));
+            removeAssignment.addActionListener(e -> removeAssignment(course));
+            adjustWeights.addActionListener(e -> adjustWeights(course));
+            adjustBoundaries.addActionListener(e -> adjustBoundaries(course));
+            markInactive.addActionListener(e -> markStudentInactive(course));
+            removeCourse.addActionListener(e -> {
+                courseManager.removeCourse(course.getCourseId());
+                refreshCourseList();
+            });
+
+            editMenu.add(importGrades);
+            editMenu.add(addAssignment);
+            editMenu.add(removeAssignment);
+            editMenu.add(adjustWeights);
+            editMenu.add(adjustBoundaries);
+            editMenu.add(markInactive);
+            editMenu.add(removeCourse);
+
+            editMenu.show(editBtn, 0, editBtn.getHeight());
+        });
+        topBar.add(editBtn);
+        courseDisplay.add(topBar, BorderLayout.NORTH);
+
+        // build table columns
+        List<Assignment> assignments = course.getAssignments();
+        String[] columns = new String[assignments.size() + 3];
+        columns[0] = "Student";
+        for (int i = 0; i < assignments.size(); i++) {
+            columns[i + 1] = assignments.get(i).getName();
         }
-        data[i][columns.length - 2] = String.format("%.1f%%", s.getFinalPercent());
-        data[i][columns.length - 1] = s.getLetterGrade();
+        columns[columns.length - 2] = "Final %";
+        columns[columns.length - 1] = "Grade";
+
+        // build table rows from active students
+        List<Student> students = course.getActiveStudents();
+        Object[][] data = new Object[students.size()][columns.length];
+        for (int i = 0; i < students.size(); i++) {
+            Student s = students.get(i);
+            data[i][0] = s.getName();
+            for (int j = 0; j < assignments.size(); j++) {
+                data[i][j + 1] = s.getScore(assignments.get(j).getName());
+            }
+            data[i][columns.length - 2] = String.format("%.1f%%", s.getFinalPercent());
+            data[i][columns.length - 1] = s.getLetterGrade();
+        }
+
+        JTable table = new JTable(data, columns);
+        table.setFillsViewportHeight(true);
+        courseDisplay.add(new JScrollPane(table), BorderLayout.CENTER);
+
+        centerPanel.removeAll();
+        centerPanel.add(courseDisplay, BorderLayout.CENTER);
+        centerPanel.revalidate();
+        centerPanel.repaint();
     }
 
-    JTable table = new JTable(data, columns);
-    table.setFillsViewportHeight(true);
-    courseDisplay.add(new JScrollPane(table), BorderLayout.CENTER);
+    // add assignment dialog
+    private void addAssignment(Course course) {
+        JTextField nameField = new JTextField();
+        JTextField weightField = new JTextField();
+        JTextField maxPointsField = new JTextField();
 
-    courseDisplay.revalidate();
-    courseDisplay.repaint();
+        Object[] fields = {
+                "Assignment Name:", nameField,
+                "Weight (e.g. 0.20):", weightField,
+                "Max Points:", maxPointsField
+        };
+
+        int result = JOptionPane.showConfirmDialog(this, fields, "Add Assignment", JOptionPane.OK_CANCEL_OPTION);
+
+        if (result == JOptionPane.OK_OPTION) {
+            try {
+                String name = nameField.getText().trim();
+                double weight = Double.parseDouble(weightField.getText().trim());
+                double maxPoints = Double.parseDouble(maxPointsField.getText().trim());
+
+                if (name.isEmpty()) {
+                    JOptionPane.showMessageDialog(this, "Assignment name cannot be empty.");
+                    return;
+                }
+
+                Assignment a = new Assignment(name, weight, maxPoints, "");
+                course.addAssignment(a);
+                showCourseView(course);
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(this, "Weight and Max Points must be numbers.");
+            }
+        }
     }
 
-    // connect scale changes to letter grades once per course instance
+    // remove assignment dialog
+    private void removeAssignment(Course course) {
+        List<Assignment> assignments = course.getAssignments();
+        if (assignments.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "No assignments to remove.");
+            return;
+        }
+
+        String[] names = assignments.stream().map(Assignment::getName).toArray(String[]::new);
+        String selected = (String) JOptionPane.showInputDialog(this, "Select assignment to remove:",
+                "Remove Assignment", JOptionPane.PLAIN_MESSAGE, null, names, names[0]);
+
+        if (selected != null) {
+            assignments.removeIf(a -> a.getName().equals(selected));
+            showCourseView(course);
+        }
+    }
+
+    // adjust weights dialog
+    private void adjustWeights(Course course) {
+        List<Assignment> assignments = course.getAssignments();
+        if (assignments.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "No assignments to adjust.");
+            return;
+        }
+
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        JTextField[] fields = new JTextField[assignments.size()];
+
+        for (int i = 0; i < assignments.size(); i++) {
+            Assignment a = assignments.get(i);
+            JPanel row = new JPanel(new FlowLayout(FlowLayout.LEFT));
+            row.add(new JLabel(a.getName() + ":"));
+            fields[i] = new JTextField(String.valueOf(a.getWeight()), 8);
+            row.add(fields[i]);
+            panel.add(row);
+        }
+
+        int result = JOptionPane.showConfirmDialog(this, panel, "Adjust Weights", JOptionPane.OK_CANCEL_OPTION);
+
+        if (result == JOptionPane.OK_OPTION) {
+            try {
+                for (int i = 0; i < assignments.size(); i++) {
+                    double weight = Double.parseDouble(fields[i].getText().trim());
+                    assignments.get(i).setWeight(weight);
+                }
+                grader.calculateFinalPercentsForCourse(course);
+                grader.assignLetterGradesForCourse(course);
+                showCourseView(course);
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(this, "All weights must be numbers.");
+            }
+        }
+    }
+
+    // adjust grade boundaries dialog
+    private void adjustBoundaries(Course course) {
+        
+        List<GradeRange> ranges = course.getGradeScale().getRanges();
+
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        JTextField[] minFields = new JTextField[ranges.size()];
+
+        for (int i = 0; i < ranges.size(); i++) {
+            GradeRange r = ranges.get(i);
+            JPanel row = new JPanel(new FlowLayout(FlowLayout.LEFT));
+            row.add(new JLabel(String.format("%-4s  max: %5.1f   min:", r.getLetter(), r.getMax())));
+            minFields[i] = new JTextField(String.valueOf(r.getMin()), 6);
+            row.add(minFields[i]);
+            panel.add(row);
+        }
+
+        int result = JOptionPane.showConfirmDialog(this, panel, "Adjust Grade Boundaries", JOptionPane.OK_CANCEL_OPTION);
+
+        if (result == JOptionPane.OK_OPTION) {
+            try {
+                for (int i = 0; i < ranges.size(); i++) {
+                    GradeRange r = ranges.get(i);
+                    double newMin = Double.parseDouble(minFields[i].getText().trim());
+                    course.getGradeScale().updateRange(r.getLetter(), newMin, r.getMax());
+                }
+                grader.assignLetterGradesForCourse(course);
+                showCourseView(course);
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(this, "All values must be numbers.");
+            }
+        }
+    }
+
+    // mark student inactive dialog
+    private void markStudentInactive(Course course) {
+        List<Student> students = course.getStudents();
+        if (students.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "No students in this course.");
+            return;
+        }
+
+        String[] names = students.stream().map(Student::getName).toArray(String[]::new);
+        String selected = (String) JOptionPane.showInputDialog(this, "Select student to mark inactive:",
+                "Mark Inactive", JOptionPane.PLAIN_MESSAGE, null, names, names[0]);
+
+        if (selected != null) {
+            students.stream()
+                    .filter(s -> s.getName().equals(selected))
+                    .forEach(s -> s.setActive(false));
+            showCourseView(course);
+        }
+    }
+
+    // attach observer to refresh letter grades when scale changes
     private void ensureScaleLetterRefresh(Course course) {
-        if (course == null) {
+        if (course == null)
             return;
-        }
-        if (scaleLetterRefreshDone.contains(course)) {
+        if (scaleLetterRefreshDone.contains(course))
             return;
-        }
-        ScaleLetterRefresh.attach(course, grader);
         scaleLetterRefreshDone.add(course);
     }
 
+    // handle new course submission
     private void handleInitCourse() {
         String courseName = courseNameField.getText().trim();
         String courseId = courseIdField.getText().trim();
@@ -260,42 +432,14 @@ public class Portal extends JFrame implements ActionListener {
             return;
         }
 
-        Course newCourse = new Course(courseName, courseId);
-        courseManager.addCourse(newCourse);
+        courseManager.createBlankCourse(courseName, courseId);
 
-        System.out.println("Added course: " + courseName + " (" + courseId + ")");
-
-        // reset UI
         courseNameField.setText("");
         courseIdField.setText("");
-
         addCoursePanel.setVisible(false);
-        importButton.setVisible(true);
 
+        refreshCourseList();
         revalidate();
         repaint();
     }
-
-    private void displayCourseStats(List<Student> students) {
-        
-        String[] columnNames = {"Name", "Grade"};
-        Object[][] data = new Object[students.size()][2];
-        for (int i = 0; i < students.size(); i++) {
-            Student s = students.get(i);
-            data[i][0] = s.getName();
-            data[i][1] = s.getFinalPercent(); //calculateFinalPercentForStudent(s);
-        }
-
-            JTable table = new JTable(data, columnNames);
-            JScrollPane scrollPane = new JScrollPane(table);
-
-            
-            centerPanel.removeAll(); 
-
-            centerPanel.add(scrollPane, BorderLayout.CENTER);
-
-            centerPanel.revalidate();
-            centerPanel.repaint();
-    }
-
 }
