@@ -43,6 +43,10 @@ public class CourseManager {
         return new ArrayList<>(courses.values());
     }
 
+    public Map<String, Course> getCourseMap() {
+        return courses;
+    }
+
     public void addCourse(Course course) {
         if (course == null || course.getCourseId() == null) {
             System.out.println("Invalid course or course ID.");

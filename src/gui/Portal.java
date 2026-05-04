@@ -32,6 +32,8 @@ import java.awt.Component;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 
 public class Portal extends JFrame implements ActionListener {
     private JButton addCourseButton;
@@ -62,7 +64,29 @@ public class Portal extends JFrame implements ActionListener {
         this.grader = new Grader();
         this.scaleLetterRefreshDone = new HashSet<Course>();
         setSize(1200, 800);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        // setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                // if (isDirty) {
+                    int result = JOptionPane.showConfirmDialog(
+                        Portal.this,
+                        "Save changes before exiting?",
+                        "Unsaved Changes",
+                        JOptionPane.YES_NO_CANCEL_OPTION
+                    );
+
+                    if (result == JOptionPane.YES_OPTION) {
+                        FileHandler f = new FileHandler();
+                        f.saveData("", courseManager.getCourseMap());
+                        Portal.this.dispose();
+                    } else {
+                        Portal.this.dispose();
+                    }
+            }
+        });
+
         setLayout(new BorderLayout());
 
         // top panel
@@ -110,11 +134,13 @@ public class Portal extends JFrame implements ActionListener {
             }
         });
 
+        //TODO: ADD SAVE GRADES BUTTON
+
         JPanel westHeader = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
         westHeader.setOpaque(false);
         westHeader.add(headerEditBtn);
 
-        headerBackBtn = new JButton("Back");
+        headerBackBtn = new JButton("Home");
         headerBackBtn.setVisible(false);
         headerBackBtn.addActionListener(e -> {
             courseDisplay.setLayout(new BoxLayout(courseDisplay, BoxLayout.Y_AXIS));
@@ -756,7 +782,7 @@ public class Portal extends JFrame implements ActionListener {
         int passing = 0;
         for (Student s : course.getActiveStudents()) {
             String g = s.getLetterGrade();
-            if (g != null && !"F".equals(g)) {
+            if (g != null && !"F".equals(g) && !"D".equals(g)) {
                 passing++;
             }
         }

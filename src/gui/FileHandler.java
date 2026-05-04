@@ -3,9 +3,13 @@
 package gui;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -169,6 +173,43 @@ public class FileHandler {
             System.out.println("Failed to load data from " + filePath);
         }
         return courses;
+    }
+
+    public boolean saveData(String filePath, Map<String, Course> courses) {
+
+        try {
+            if (filePath.equals("") || filePath.trim().isEmpty()) {
+                // String date = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+                // filePath = "StoredData-" + date + ".csv";
+                filePath = "StoredData.csv";
+            }
+
+            BufferedWriter writer = new BufferedWriter(new FileWriter(filePath));
+            writer.write("courseId,courseName,assignmentName,weight,maxPoints,note");
+            writer.newLine();
+
+            for (Course course : courses.values()) {
+                for (Assignment assignment : course.getAssignments()) {
+                    String line = String.format("%s,%s,%s,%.2f,%.2f,%s",
+                            course.getCourseId(),
+                            course.getCourseName(),
+                            assignment.getName(),
+                            assignment.getWeight(),
+                            assignment.getMaxPoints(),
+                            assignment.getNote() != null ? assignment.getNote() : "");
+                    writer.write(line);
+                    writer.newLine();
+                }
+            }
+            writer.close();
+            System.out.println("Data saved successfully to " + filePath);
+            return true;
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.out.println("Error saving data to " + filePath);
+            return false;
+        }
+
     }
 
 
