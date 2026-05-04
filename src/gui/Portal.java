@@ -12,6 +12,7 @@ import core.Course;
 import core.CourseManager;
 import core.GradeRange;
 import core.ScaleLetterRefresh;
+import core.Stats;
 import core.StudentImportCsv;
 
 import java.awt.event.ActionEvent;
@@ -22,6 +23,11 @@ import java.util.List;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 
 public class Portal extends JFrame implements ActionListener {
     private JButton addCourseButton;
@@ -41,6 +47,11 @@ public class Portal extends JFrame implements ActionListener {
     private Grader grader;
     private HashSet<Course> scaleLetterRefreshDone;
 
+    private JLabel headerCourseTitle;
+    private JButton headerEditBtn;
+    private JButton headerBackBtn;
+    private FullWidthCenterHeaderBar topHeaderBar;
+
     public Portal(CourseManager c) {
         super("Grading Portal");
         this.courseManager = c;
@@ -51,7 +62,10 @@ public class Portal extends JFrame implements ActionListener {
         setLayout(new BorderLayout());
 
         // top panel
-        JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        FullWidthCenterHeaderBar headerBar = new FullWidthCenterHeaderBar();
+        headerBar.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(170, 170, 170)),
+                BorderFactory.createEmptyBorder(6, 10, 8, 10)));
 
         coursesButton = new JButton("Courses");
         coursesButton.setActionCommand("courses_menu");
@@ -60,10 +74,37 @@ public class Portal extends JFrame implements ActionListener {
         addCourseButton = new JButton("Add Course");
         addCourseButton.addActionListener(this);
 
-        topPanel.add(coursesButton);
-        topPanel.add(addCourseButton);
+        headerCourseTitle = new JLabel();
+        headerCourseTitle.setVisible(false);
 
-        add(topPanel, BorderLayout.NORTH);
+        headerEditBtn = new JButton("Edit Course");
+        headerEditBtn.setVisible(false);
+        headerEditBtn.addActionListener(e -> {
+            if (currentCourse != null) {
+                showEditCourseMenu(headerEditBtn, currentCourse);
+            }
+        });
+
+        JPanel westHeader = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
+        westHeader.setOpaque(false);
+        westHeader.add(headerEditBtn);
+
+        headerBackBtn = new JButton("Back");
+        headerBackBtn.setVisible(false);
+        headerBackBtn.addActionListener(e -> {
+            courseDisplay.setLayout(new BoxLayout(courseDisplay, BoxLayout.Y_AXIS));
+            refreshCourseList();
+        });
+        JPanel eastHeader = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
+        eastHeader.setOpaque(false);
+        eastHeader.add(coursesButton);
+        eastHeader.add(addCourseButton);
+        eastHeader.add(headerBackBtn);
+
+        headerBar.wirePanels(westHeader, headerCourseTitle, eastHeader);
+        this.topHeaderBar = headerBar;
+
+        add(headerBar, BorderLayout.NORTH);
 
         // center panel
         centerPanel = new JPanel(new BorderLayout());
@@ -85,12 +126,21 @@ public class Portal extends JFrame implements ActionListener {
         courseIdField = new JTextField(15);
         JButton submitButton = new JButton("Submit");
         submitButton.addActionListener(e -> handleInitCourse());
+        JButton cancelAddCourseButton = new JButton("Cancel");
+        cancelAddCourseButton.addActionListener(e -> {
+            courseNameField.setText("");
+            courseIdField.setText("");
+            addCoursePanel.setVisible(false);
+            revalidate();
+            repaint();
+        });
 
         addCoursePanel.add(new JLabel("Course Name:"));
         addCoursePanel.add(courseNameField);
         addCoursePanel.add(new JLabel("Course ID:"));
         addCoursePanel.add(courseIdField);
         addCoursePanel.add(submitButton);
+        addCoursePanel.add(cancelAddCourseButton);
         addCoursePanel.setVisible(false);
 
         add(addCoursePanel, BorderLayout.SOUTH);
@@ -127,7 +177,7 @@ public class Portal extends JFrame implements ActionListener {
                     popupMenu.add(item);
                 }
             }
-            popupMenu.show(this, 100, 50);
+            popupMenu.show(coursesButton, 0, coursesButton.getHeight());
         }
 
         // show add course panel
@@ -140,6 +190,7 @@ public class Portal extends JFrame implements ActionListener {
 
     // refresh the course list on the home screen
     private void refreshCourseList() {
+        setCourseHeaderVisible(false);
         centerPanel.removeAll();
 
         JPanel listPanel = new JPanel();
@@ -147,16 +198,31 @@ public class Portal extends JFrame implements ActionListener {
 
         List<Course> courses = courseManager.getCourses();
         for (Course c : courses) {
-            JPanel row = new JPanel(new BorderLayout());
+            JPanel row = new JPanel(new GridBagLayout());
             row.setBorder(BorderFactory.createEmptyBorder(8, 10, 8, 10));
-            row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 60));
+            row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 76));
 
-            JLabel label = new JLabel(c.getCourseId() + " - " + c.getCourseName());
+            JLabel label = new JLabel(courseHomeRowHtml(c));
             JButton openBtn = new JButton("Open");
             openBtn.addActionListener(ev -> showCourseView(c));
 
-            row.add(label, BorderLayout.WEST);
-            row.add(openBtn, BorderLayout.EAST);
+            GridBagConstraints gbc = new GridBagConstraints();
+            gbc.gridy = 0;
+            gbc.fill = GridBagConstraints.BOTH;
+            gbc.weightx = 1.0;
+            gbc.gridx = 0;
+            row.add(Box.createHorizontalGlue(), gbc);
+            gbc.gridx = 1;
+            gbc.weightx = 0;
+            gbc.anchor = GridBagConstraints.CENTER;
+            row.add(label, gbc);
+            gbc.gridx = 2;
+            gbc.weightx = 1.0;
+            JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
+            right.setOpaque(false);
+            right.add(openBtn);
+            row.add(right, gbc);
+
             listPanel.add(row);
         }
 
@@ -165,28 +231,41 @@ public class Portal extends JFrame implements ActionListener {
         centerPanel.repaint();
     }
 
-    // show course detail view with student grade table
-    private void showCourseView(Course course) {
-        this.currentCourse = course;
-        ensureScaleLetterRefresh(course);
-        courseDisplay.removeAll();
-        courseDisplay.setLayout(new BorderLayout());
+    private void setCourseHeaderVisible(boolean visible) {
+        headerCourseTitle.setVisible(visible);
+        headerEditBtn.setVisible(visible);
+        headerBackBtn.setVisible(visible);
+        if (topHeaderBar != null) {
+            topHeaderBar.revalidate();
+            topHeaderBar.repaint();
+        }
+    }
 
-        // top bar
-        JButton backBtn = new JButton("Back");
-        backBtn.addActionListener(ev -> {
-            courseDisplay.setLayout(new BoxLayout(courseDisplay, BoxLayout.Y_AXIS));
-            refreshCourseList();
-        });
+    private static String htmlEscape(String s) {
+        if (s == null) {
+            return "";
+        }
+        return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
+    }
 
-        JPanel topBar = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        topBar.add(backBtn);
-        topBar.add(new JLabel("  " + course.getCourseId() + " - " + course.getCourseName()));
+    private static String courseTitleHtml(Course course) {
+        return "<html><div style='text-align:center'><b>Course:</b> "
+                + htmlEscape(course.getCourseName()) + " &nbsp;&nbsp; <b>ID:</b> "
+                + htmlEscape(course.getCourseId()) + "</div></html>";
+    }
 
-        // edit course dropdown
-        JButton editBtn = new JButton("Edit Course");
-        editBtn.addActionListener(ev -> {
-            JPopupMenu editMenu = new JPopupMenu();
+    private static String courseHomeRowHtml(Course course) {
+        int enrolled = course.getStudents() != null ? course.getStudents().size() : 0;
+        int active = course.getActiveStudents().size();
+        return "<html><div style='text-align:center'><b>Course:</b> "
+                + htmlEscape(course.getCourseName()) + " &nbsp;&nbsp; <b>ID:</b> "
+                + htmlEscape(course.getCourseId()) + "<br/>"
+                + "Enrolled: " + enrolled + " &nbsp;&middot;&nbsp; Active: " + active
+                + "</div></html>";
+    }
+
+    private void showEditCourseMenu(JButton anchor, Course course) {
+        JPopupMenu editMenu = new JPopupMenu();
 
             JMenuItem importGrades = new JMenuItem("Import Grades");
             JMenuItem addAssignment = new JMenuItem("Add Assignment");
@@ -196,6 +275,7 @@ public class Portal extends JFrame implements ActionListener {
             JMenuItem curveToTop = new JMenuItem("Curve Scale to Top Student");
             JMenuItem resetGradeScale = new JMenuItem("Reset Grade Scale to Default");
             JMenuItem markInactive = new JMenuItem("Set Student Activity");
+            JMenuItem editStudentNote = new JMenuItem("Add or Edit Student Note");
             JMenuItem removeCourse = new JMenuItem("Remove Course");
 
             importGrades.addActionListener(e -> {
@@ -220,6 +300,7 @@ public class Portal extends JFrame implements ActionListener {
                 showCourseView(course);
             });
             markInactive.addActionListener(e -> editStudentActivity(course));
+            editStudentNote.addActionListener(e -> editStudentNoteDialog(course));
             removeCourse.addActionListener(e -> {
                 courseManager.removeCourse(course.getCourseId());
                 refreshCourseList();
@@ -233,27 +314,62 @@ public class Portal extends JFrame implements ActionListener {
             editMenu.add(curveToTop);
             editMenu.add(resetGradeScale);
             editMenu.add(markInactive);
+            editMenu.add(editStudentNote);
             editMenu.add(removeCourse);
 
-            editMenu.show(editBtn, 0, editBtn.getHeight());
-        });
-        topBar.add(editBtn);
-        courseDisplay.add(topBar, BorderLayout.NORTH);
+        editMenu.show(anchor, 0, anchor.getHeight());
+    }
+
+    // show course detail view with student grade table
+    private void showCourseView(Course course) {
+        this.currentCourse = course;
+        ensureScaleLetterRefresh(course);
+        courseDisplay.removeAll();
+        courseDisplay.setLayout(new BorderLayout());
+
+        headerCourseTitle.setText(courseTitleHtml(course));
+        setCourseHeaderVisible(true);
+
+        Stats rosterStats = new Stats();
+        rosterStats.computeCourseOverview(course);
+
+        JLabel statsLabel = new JLabel(buildCourseStatsHtml(rosterStats, course));
+        statsLabel.setHorizontalAlignment(JLabel.CENTER);
+
+        JPanel statsRow = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
+        statsRow.setAlignmentX(Component.CENTER_ALIGNMENT);
+        statsRow.add(statsLabel);
+
+        LetterGradeBarChartPanel letterChart = new LetterGradeBarChartPanel(rosterStats.letterCounts,
+                course.getGradeScale().getRanges());
+        JPanel chartWrap = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
+        chartWrap.setAlignmentX(Component.CENTER_ALIGNMENT);
+        chartWrap.setBorder(BorderFactory.createTitledBorder("Letter Counts"));
+        chartWrap.add(letterChart);
+
+        JPanel topStack = new JPanel();
+        topStack.setLayout(new BoxLayout(topStack, BoxLayout.Y_AXIS));
+        topStack.setBorder(BorderFactory.createEmptyBorder(10, 0, 0, 0));
+        topStack.add(statsRow);
+        topStack.add(chartWrap);
+
+        courseDisplay.add(topStack, BorderLayout.NORTH);
 
         // build table columns (status text + normalized weight percent per assignment)
         List<Assignment> assignments = course.getAssignments();
-        String[] columns = new String[assignments.size() + 4];
+        String[] columns = new String[assignments.size() + 5];
         columns[0] = "Student";
         columns[1] = "Active Status";
+        columns[2] = "Notes";
         double weightSum = grader.getTotalWeight(course);
         for (int i = 0; i < assignments.size(); i++) {
             Assignment a = assignments.get(i);
             String name = a.getName();
             if (weightSum > 0 && a.getWeight() > 0) {
                 double share = 100.0 * a.getWeight() / weightSum;
-                columns[i + 2] = String.format("%s (%.1f%%)", name, share);
+                columns[i + 3] = String.format("%s (%.1f%%)", name, share);
             } else {
-                columns[i + 2] = name + " (—)";
+                columns[i + 3] = name + " (—)";
             }
         }
         columns[columns.length - 2] = "Final %";
@@ -266,8 +382,9 @@ public class Portal extends JFrame implements ActionListener {
             Student s = students.get(i);
             data[i][0] = s.getName();
             data[i][1] = s.isActive() ? "Active" : "Inactive";
+            data[i][2] = s.getNote() != null ? s.getNote() : "";
             for (int j = 0; j < assignments.size(); j++) {
-                data[i][j + 2] = s.getScore(assignments.get(j).getName());
+                data[i][j + 3] = s.getScore(assignments.get(j).getName());
             }
             data[i][columns.length - 2] = String.format("%.1f%%", s.getFinalPercent());
             data[i][columns.length - 1] = s.getLetterGrade();
@@ -475,6 +592,86 @@ public class Portal extends JFrame implements ActionListener {
         }
     }
 
+    // html summary for the top stats strip (letter counts shown in bar chart)
+    private String buildCourseStatsHtml(Stats st, Course course) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("<html><body style='font-size:11px;text-align:center'>");
+
+        int totalEnrolled = course.getStudents() != null ? course.getStudents().size() : 0;
+        int inactive = totalEnrolled - st.activeCount;
+        sb.append("<b>Course Stats (Active Only)</b><br/><br/>");
+        sb.append("Enrolled Active: ").append(st.activeCount).append(" / Inactive ").append(inactive)
+                .append("<br/><br/>");
+
+        if (st.activeCount == 0) {
+            sb.append("No active students.</body></html>");
+            return sb.toString();
+        }
+
+        sb.append(String.format(
+                "Final %% Statistics: Mean %.2f · Median %.2f · St. Dev. %.2f · Min %.2f · Max %.2f<br/><br/>",
+                st.avgFinalPercent, st.medianFinalPercent, st.stdFinalPercent, st.minFinalPercent,
+                st.maxFinalPercent));
+
+        int passing = 0;
+        for (Student s : course.getActiveStudents()) {
+            String g = s.getLetterGrade();
+            if (g != null && !"F".equals(g)) {
+                passing++;
+            }
+        }
+        sb.append(String.format("Passing: %d / %d (%.1f%%)",
+                passing, st.activeCount, 100.0 * passing / st.activeCount));
+
+        sb.append("</body></html>");
+        return sb.toString();
+    }
+
+    // pick a student and edit their note text
+    private void editStudentNoteDialog(Course course) {
+        List<Student> students = course.getStudents();
+        if (students.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "No students in this course.");
+            return;
+        }
+
+        String[] choices = new String[students.size()];
+        for (int i = 0; i < students.size(); i++) {
+            Student s = students.get(i);
+            choices[i] = s.getName() + " (" + s.getStudentId() + ")";
+        }
+
+        String picked = (String) JOptionPane.showInputDialog(this, "Choose student:", "Add or Edit Student Note",
+                JOptionPane.PLAIN_MESSAGE, null, choices, choices[0]);
+
+        if (picked == null) {
+            return;
+        }
+
+        Student chosen = null;
+        for (int i = 0; i < students.size(); i++) {
+            if (choices[i].equals(picked)) {
+                chosen = students.get(i);
+                break;
+            }
+        }
+        if (chosen == null) {
+            return;
+        }
+
+        JTextArea area = new JTextArea(chosen.getNote() != null ? chosen.getNote() : "", 6, 36);
+        area.setLineWrap(true);
+        area.setWrapStyleWord(true);
+        JScrollPane scroll = new JScrollPane(area);
+        int result = JOptionPane.showConfirmDialog(this, scroll,
+                "Note for " + chosen.getName(), JOptionPane.OK_CANCEL_OPTION);
+
+        if (result == JOptionPane.OK_OPTION) {
+            chosen.setNote(area.getText().trim());
+            showCourseView(course);
+        }
+    }
+
     // attach observer to refresh letter grades when scale changes
     private void ensureScaleLetterRefresh(Course course) {
         if (course == null)
@@ -504,5 +701,78 @@ public class Portal extends JFrame implements ActionListener {
         refreshCourseList();
         revalidate();
         repaint();
+    }
+
+    private static class FullWidthCenterHeaderBar extends JPanel {
+        private JPanel westCluster;
+        private JComponent centerTitle;
+        private JPanel eastCluster;
+
+        FullWidthCenterHeaderBar() {
+            setLayout(null);
+        }
+
+        void wirePanels(JPanel west, JComponent center, JPanel east) {
+            this.westCluster = west;
+            this.centerTitle = center;
+            this.eastCluster = east;
+            removeAll();
+            if (center != null) {
+                add(center);
+            }
+            if (west != null) {
+                add(west);
+            }
+            if (east != null) {
+                add(east);
+            }
+        }
+
+        public void doLayout() {
+            synchronized (getTreeLock()) {
+                Insets in = getInsets();
+                int W = getWidth() - in.left - in.right;
+                int H = getHeight() - in.top - in.bottom;
+                int top = in.top;
+                int left = in.left;
+                if (westCluster != null) {
+                    Dimension pw = westCluster.getPreferredSize();
+                    westCluster.setBounds(left, top + (H - pw.height) / 2, pw.width, pw.height);
+                }
+                if (eastCluster != null) {
+                    Dimension pe = eastCluster.getPreferredSize();
+                    eastCluster.setBounds(left + W - pe.width, top + (H - pe.height) / 2, pe.width, pe.height);
+                }
+                if (centerTitle != null) {
+                    if (centerTitle.isVisible()) {
+                        Dimension pt = centerTitle.getPreferredSize();
+                        int tx = left + (W - pt.width) / 2;
+                        int ty = top + (H - pt.height) / 2;
+                        centerTitle.setBounds(tx, ty, pt.width, pt.height);
+                    } else {
+                        centerTitle.setBounds(0, 0, 0, 0);
+                    }
+                }
+            }
+        }
+
+        public Dimension getPreferredSize() {
+            Insets in = getInsets();
+            int mh = 28;
+            if (westCluster != null) {
+                mh = Math.max(mh, westCluster.getPreferredSize().height);
+            }
+            if (eastCluster != null) {
+                mh = Math.max(mh, eastCluster.getPreferredSize().height);
+            }
+            if (centerTitle != null && centerTitle.isVisible()) {
+                mh = Math.max(mh, centerTitle.getPreferredSize().height);
+            }
+            return new Dimension(600, mh + in.top + in.bottom);
+        }
+
+        public Dimension getMinimumSize() {
+            return getPreferredSize();
+        }
     }
 }

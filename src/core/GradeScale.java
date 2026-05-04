@@ -63,7 +63,8 @@ public class GradeScale {
                 new GradeRange(LETTER_F, 0, 60)));
     }
 
-    // shift ranges by top score; keep highest letter max at 100 for later higher scores
+    // shift ranges by top score; keep highest letter max at 100 for later higher
+    // scores
     public void shiftToTopScore(double topScore) {
         double dif = 100 - topScore;
         for (int i = 0; i < ranges.size(); i++) {
@@ -96,7 +97,8 @@ public class GradeScale {
         if (percent < 0) {
             return ranges.get(ranges.size() - 1).getLetter();
         }
-        // inclusive min/max so values exactly on a boundary still match (needed after curve shift)
+        // inclusive min/max so values exactly on a boundary still match (needed after
+        // curve shift)
         for (GradeRange r : ranges) {
             if (percent >= r.getMin() && percent <= r.getMax()) {
                 return r.getLetter();

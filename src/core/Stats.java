@@ -13,6 +13,7 @@ public class Stats {
     public double medianFinalPercent;
     public double minFinalPercent;
     public double maxFinalPercent;
+    public double stdFinalPercent;
     public HashMap<String, Integer> letterCounts;
 
     // constructor
@@ -75,6 +76,7 @@ public class Stats {
         medianFinalPercent = 0.0;
         minFinalPercent = 0.0;
         maxFinalPercent = 0.0;
+        stdFinalPercent = 0.0;
         letterCounts.clear();
 
         if (course == null) {
@@ -116,6 +118,18 @@ public class Stats {
         }
 
         avgFinalPercent = sum / activeCount;
+
+        if (activeCount > 1) {
+            double sumSq = 0.0;
+            for (int i = 0; i < active.size(); i++) {
+                double d = active.get(i).getFinalPercent() - avgFinalPercent;
+                sumSq += d * d;
+            }
+            stdFinalPercent = Math.sqrt(sumSq / activeCount);
+        } else {
+            stdFinalPercent = 0.0;
+        }
+
         medianFinalPercent = calculateMedian(finals);
         minFinalPercent = min;
         maxFinalPercent = max;
