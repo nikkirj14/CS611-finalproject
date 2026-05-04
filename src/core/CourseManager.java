@@ -3,6 +3,8 @@ package core;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
 import gui.FileHandler;
 
 public class CourseManager {
@@ -14,22 +16,27 @@ public class CourseManager {
     }
     
     public boolean populatePriorCourses(String filePath) {
-        FileHandler f = new FileHandler();
-        if (!f.validateFile(new java.io.File(filePath))) {
-            System.out.println("Invalid file: " + filePath);
-            return false;
+    FileHandler f = new FileHandler();
+    if (!f.validateFile(new java.io.File(filePath))) {
+        System.out.println("Invalid file: " + filePath);
+        return false;
+    }
+
+    HashMap<String, Course> priorCourses = new HashMap<>(f.loadData(filePath));
+    if (priorCourses == null || priorCourses.isEmpty()) {
+        System.out.println("No courses loaded from: " + filePath);
+        return false;
+    }
+
+   
+    for (Map.Entry<String, Course> entry : priorCourses.entrySet()) {
+        if (!courses.containsKey(entry.getKey())) {
+            courses.put(entry.getKey(), entry.getValue());
         }
-        System.out.println("Valid file: " + filePath);
-        
-        HashMap<String, Course> priorCourses = new HashMap<>(f.loadData(filePath));
-        if (priorCourses == null || priorCourses.isEmpty()) {
-            System.out.println("No courses loaded from: " + filePath);
-        } else {
-            System.out.println("Loaded " + priorCourses.size() + " courses from: " + filePath);
-        }
-        this.courses = priorCourses;
-        System.out.println("CourseManager initialized with " + courses.size() + " courses.");
-        return true;
+    }
+
+    System.out.println("Loaded " + priorCourses.size() + " courses from: " + filePath);
+    return true;
     }
 
     public List<Course> getCourses() {

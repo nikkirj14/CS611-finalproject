@@ -14,12 +14,16 @@ import core.GradeRange;
 import core.ScaleLetterRefresh;
 import core.Stats;
 import core.StudentImportCsv;
+import core.CourseResultsCsv;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
@@ -74,6 +78,27 @@ public class Portal extends JFrame implements ActionListener {
         addCourseButton = new JButton("Add Course");
         addCourseButton.addActionListener(this);
 
+        JButton saveGradesButton = new JButton("Save Grades");
+        saveGradesButton.addActionListener(e -> {
+            if (currentCourse == null) {
+                JOptionPane.showMessageDialog(this, "Please open a course first.");
+                return;
+            }
+            JFileChooser chooser = new JFileChooser();
+            chooser.setSelectedFile(new File(currentCourse.getCourseId() + "_grades.csv"));
+            int res = chooser.showSaveDialog(this);
+            if (res == JFileChooser.APPROVE_OPTION) {
+                File file = chooser.getSelectedFile();
+                CourseResultsCsv exporter = new CourseResultsCsv();
+                boolean ok = exporter.exportToFile(currentCourse, file.getAbsolutePath());
+                if (ok) {
+                    JOptionPane.showMessageDialog(this, "Grades saved to " + file.getName());
+                } else {
+                    JOptionPane.showMessageDialog(this, "Failed to save grades.");
+                }
+            }
+        });
+
         headerCourseTitle = new JLabel();
         headerCourseTitle.setVisible(false);
 
@@ -95,10 +120,12 @@ public class Portal extends JFrame implements ActionListener {
             courseDisplay.setLayout(new BoxLayout(courseDisplay, BoxLayout.Y_AXIS));
             refreshCourseList();
         });
+
         JPanel eastHeader = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
         eastHeader.setOpaque(false);
         eastHeader.add(coursesButton);
         eastHeader.add(addCourseButton);
+        eastHeader.add(saveGradesButton);
         eastHeader.add(headerBackBtn);
 
         headerBar.wirePanels(westHeader, headerCourseTitle, eastHeader);
@@ -286,6 +313,9 @@ public class Portal extends JFrame implements ActionListener {
                 runStudentCsvImport(course, file);
             });
 
+            JMenuItem importWeights = new JMenuItem("Import Weights from Course");
+            importWeights.addActionListener(e -> importWeightsFromCourse(course));
+            editMenu.add(importWeights);
             addAssignment.addActionListener(e -> addAssignment(course));
             removeAssignment.addActionListener(e -> removeAssignment(course));
             adjustWeights.addActionListener(e -> adjustWeights(course));
@@ -322,87 +352,113 @@ public class Portal extends JFrame implements ActionListener {
 
     // show course detail view with student grade table
     private void showCourseView(Course course) {
-        this.currentCourse = course;
-        ensureScaleLetterRefresh(course);
-        courseDisplay.removeAll();
-        courseDisplay.setLayout(new BorderLayout());
+    this.currentCourse = course;
+    ensureScaleLetterRefresh(course);
+    courseDisplay.removeAll();
+    courseDisplay.setLayout(new BorderLayout());
 
-        headerCourseTitle.setText(courseTitleHtml(course));
-        setCourseHeaderVisible(true);
+    headerCourseTitle.setText(courseTitleHtml(course));
+    setCourseHeaderVisible(true);
 
-        Stats rosterStats = new Stats();
-        rosterStats.computeCourseOverview(course);
+    Stats rosterStats = new Stats();
+    rosterStats.computeCourseOverview(course);
 
-        JLabel statsLabel = new JLabel(buildCourseStatsHtml(rosterStats, course));
-        statsLabel.setHorizontalAlignment(JLabel.CENTER);
+    JLabel statsLabel = new JLabel(buildCourseStatsHtml(rosterStats, course));
+    statsLabel.setHorizontalAlignment(JLabel.CENTER);
 
-        JPanel statsRow = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
-        statsRow.setAlignmentX(Component.CENTER_ALIGNMENT);
-        statsRow.add(statsLabel);
+    JPanel statsRow = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
+    statsRow.setAlignmentX(Component.CENTER_ALIGNMENT);
+    statsRow.add(statsLabel);
 
-        LetterGradeBarChartPanel letterChart = new LetterGradeBarChartPanel(rosterStats.letterCounts,
-                course.getGradeScale().getRanges());
-        JPanel chartWrap = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
-        chartWrap.setAlignmentX(Component.CENTER_ALIGNMENT);
-        chartWrap.setBorder(BorderFactory.createTitledBorder("Letter Counts"));
-        chartWrap.add(letterChart);
+    LetterGradeBarChartPanel letterChart = new LetterGradeBarChartPanel(rosterStats.letterCounts,
+            course.getGradeScale().getRanges());
+    JPanel chartWrap = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
+    chartWrap.setAlignmentX(Component.CENTER_ALIGNMENT);
+    chartWrap.setBorder(BorderFactory.createTitledBorder("Letter Counts"));
+    chartWrap.add(letterChart);
 
-        JPanel topStack = new JPanel();
-        topStack.setLayout(new BoxLayout(topStack, BoxLayout.Y_AXIS));
-        topStack.setBorder(BorderFactory.createEmptyBorder(10, 0, 0, 0));
-        topStack.add(statsRow);
-        topStack.add(chartWrap);
+    JPanel topStack = new JPanel();
+    topStack.setLayout(new BoxLayout(topStack, BoxLayout.Y_AXIS));
+    topStack.setBorder(BorderFactory.createEmptyBorder(10, 0, 0, 0));
+    topStack.add(statsRow);
+    topStack.add(chartWrap);
 
-        courseDisplay.add(topStack, BorderLayout.NORTH);
+    courseDisplay.add(topStack, BorderLayout.NORTH);
 
-        // build table columns (status text + normalized weight percent per assignment)
-        List<Assignment> assignments = course.getAssignments();
-        String[] columns = new String[assignments.size() + 5];
-        columns[0] = "Student";
-        columns[1] = "Active Status";
-        columns[2] = "Notes";
-        double weightSum = grader.getTotalWeight(course);
-        for (int i = 0; i < assignments.size(); i++) {
-            Assignment a = assignments.get(i);
-            String name = a.getName();
-            if (weightSum > 0 && a.getWeight() > 0) {
-                double share = 100.0 * a.getWeight() / weightSum;
-                columns[i + 3] = String.format("%s (%.1f%%)", name, share);
-            } else {
-                columns[i + 3] = name + " (—)";
-            }
+    // build table columns
+    final List<Assignment> assignments = course.getAssignments();
+    String[] columns = new String[assignments.size() + 5];
+    columns[0] = "Student";
+    columns[1] = "Active Status";
+    columns[2] = "Notes";
+    double weightSum = grader.getTotalWeight(course);
+    for (int i = 0; i < assignments.size(); i++) {
+        Assignment a = assignments.get(i);
+        String name = a.getName();
+        if (weightSum > 0 && a.getWeight() > 0) {
+            double share = 100.0 * a.getWeight() / weightSum;
+            columns[i + 3] = String.format("%s (%.1f%%)", name, share);
+        } else {
+            columns[i + 3] = name + " (-)";
         }
-        columns[columns.length - 2] = "Final %";
-        columns[columns.length - 1] = "Grade";
+    }
+    columns[columns.length - 2] = "Final %";
+    columns[columns.length - 1] = "Grade";
 
-        // all students in roster (inactive still shown)
-        List<Student> students = course.getStudents();
-        Object[][] data = new Object[students.size()][columns.length];
-        for (int i = 0; i < students.size(); i++) {
-            Student s = students.get(i);
-            data[i][0] = s.getName();
-            data[i][1] = s.isActive() ? "Active" : "Inactive";
-            data[i][2] = s.getNote() != null ? s.getNote() : "";
-            for (int j = 0; j < assignments.size(); j++) {
-                data[i][j + 3] = s.getScore(assignments.get(j).getName());
-            }
-            data[i][columns.length - 2] = String.format("%.1f%%", s.getFinalPercent());
-            data[i][columns.length - 1] = s.getLetterGrade();
+    // all students in roster
+    final List<Student> students = course.getStudents();
+    Object[][] data = new Object[students.size()][columns.length];
+    for (int i = 0; i < students.size(); i++) {
+        Student s = students.get(i);
+        data[i][0] = s.getName();
+        data[i][1] = s.isActive() ? "Active" : "Inactive";
+        data[i][2] = s.getNote() != null ? s.getNote() : "";
+        for (int j = 0; j < assignments.size(); j++) {
+            data[i][j + 3] = s.getScore(assignments.get(j).getName());
         }
+        data[i][columns.length - 2] = String.format("%.1f%%", s.getFinalPercent());
+        data[i][columns.length - 1] = s.getLetterGrade();
+    }
 
-        DefaultTableModel tableModel = new DefaultTableModel(data, columns) {
-            public boolean isCellEditable(int row, int column) {
-                return false;
-            }
-        };
-        JTable table = new JTable(tableModel);
-        table.setFillsViewportHeight(true);
-        courseDisplay.add(new JScrollPane(table), BorderLayout.CENTER);
+    DefaultTableModel tableModel = new DefaultTableModel(data, columns) {
+        public boolean isCellEditable(int row, int column) {
+            // only assignment score columns editable
+            return column >= 3 && column < assignments.size() + 3;
+        }
+    };
 
-        centerPanel.removeAll();
-        centerPanel.add(courseDisplay, BorderLayout.CENTER);
-        centerPanel.revalidate();
-        centerPanel.repaint();
+    JTable table = new JTable(tableModel);
+    table.setFillsViewportHeight(true);
+
+    tableModel.addTableModelListener(e -> {
+        int row = e.getFirstRow();
+        int col = e.getColumn();
+        if (col < 3 || col >= assignments.size() + 3) return;
+
+        Student s = students.get(row);
+        Assignment a = assignments.get(col - 3);
+        Object val = tableModel.getValueAt(row, col);
+
+        try {
+            double score = Double.parseDouble(val.toString().trim());
+            s.setScore(a.getName(), score);
+            grader.calculateFinalPercentsForCourse(course);
+            grader.assignLetterGradesForCourse(course);
+
+            tableModel.setValueAt(String.format("%.1f%%", s.getFinalPercent()), row, columns.length - 2);
+            tableModel.setValueAt(s.getLetterGrade(), row, columns.length - 1);
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(Portal.this, "Score must be a number.");
+            tableModel.setValueAt(s.getScore(a.getName()), row, col);
+        }
+    });
+
+    courseDisplay.add(new JScrollPane(table), BorderLayout.CENTER);
+
+    centerPanel.removeAll();
+    centerPanel.add(courseDisplay, BorderLayout.CENTER);
+    centerPanel.revalidate();
+    centerPanel.repaint();
     }
 
     // add assignment dialog
@@ -547,6 +603,90 @@ public class Portal extends JFrame implements ActionListener {
             }
         }
     }
+
+    // import weights from another course or csv file, then recalculate grades
+    private void importWeightsFromCourse(Course targetCourse) {
+    JRadioButton fromCourse = new JRadioButton("Existing Course");
+    JRadioButton fromCsv = new JRadioButton("CSV File");
+    fromCourse.setSelected(true);
+
+    ButtonGroup group = new ButtonGroup();
+    group.add(fromCourse);
+    group.add(fromCsv);
+
+    JPanel panel = new JPanel();
+    panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+    panel.add(new JLabel("Import weights from:"));
+    panel.add(fromCourse);
+    panel.add(fromCsv);
+
+    int res = JOptionPane.showConfirmDialog(this, panel, "Import Weights", JOptionPane.OK_CANCEL_OPTION);
+    if (res != JOptionPane.OK_OPTION) return;
+
+    if (fromCourse.isSelected()) {
+        // import from existing loaded course
+        List<Course> allCourses = courseManager.getCourses();
+        List<Course> others = new ArrayList<>();
+        for (Course c : allCourses) {
+            if (!c.getCourseId().equals(targetCourse.getCourseId())) {
+                others.add(c);
+            }
+        }
+
+        if (others.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "No other courses available.");
+            return;
+        }
+
+        String[] choices = others.stream()
+                .map(c -> c.getCourseId() + " - " + c.getCourseName())
+                .toArray(String[]::new);
+
+        String selected = (String) JOptionPane.showInputDialog(this,
+                "Select course to import weights from:",
+                "Import Weights", JOptionPane.PLAIN_MESSAGE, null, choices, choices[0]);
+
+        if (selected == null) return;
+
+        Course source = others.get(java.util.Arrays.asList(choices).indexOf(selected));
+        targetCourse.copyAssignmentSetupFrom(source);
+
+    } 
+    else {
+        FileHandler f = new FileHandler();
+    File file = f.importFile(this);
+    if (file == null) return;
+
+    // load courses from file without adding them to courseManager
+    Map<String, Course> loaded = f.loadData(file.getAbsolutePath());
+    if (loaded == null || loaded.isEmpty()) {
+        JOptionPane.showMessageDialog(this, "No courses found in file.");
+        return;
+    }
+
+    String[] choices = loaded.values().stream()
+            .map(c -> c.getCourseId() + " - " + c.getCourseName())
+            .toArray(String[]::new);
+
+    String selected = (String) JOptionPane.showInputDialog(this,
+            "Select course to import weights from:",
+            "Import Weights", JOptionPane.PLAIN_MESSAGE, null, choices, choices[0]);
+
+    if (selected == null) return;
+
+    Course source = loaded.values().stream()
+            .filter(c -> (c.getCourseId() + " - " + c.getCourseName()).equals(selected))
+            .findFirst().orElse(null);
+
+    if (source == null) return;
+    targetCourse.copyAssignmentSetupFrom(source);
+    }
+
+    grader.calculateFinalPercentsForCourse(targetCourse);
+    grader.assignLetterGradesForCourse(targetCourse);
+    showCourseView(targetCourse);
+    JOptionPane.showMessageDialog(this, "Weights imported successfully.");
+}
 
     // merge csv into course (creates assignment columns if missing) then grade
     private void runStudentCsvImport(Course course, File file) {
@@ -693,6 +833,16 @@ public class Portal extends JFrame implements ActionListener {
         }
 
         courseManager.createBlankCourse(courseName, courseId);
+
+        Course newCourse = courseManager.getCourseById(courseId);
+        if (newCourse != null) {
+            int res = JOptionPane.showConfirmDialog(this,
+                    "Would you like to import weights from an existing course?",
+                    "Import Weights", JOptionPane.YES_NO_OPTION);
+            if (res == JOptionPane.YES_OPTION) {
+                importWeightsFromCourse(newCourse);
+            }
+        }
 
         courseNameField.setText("");
         courseIdField.setText("");
