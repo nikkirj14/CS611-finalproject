@@ -83,12 +83,15 @@ public class GradeScale {
         if (ranges == null || ranges.isEmpty()) {
             return null;
         }
-        // if score is at or above the top boundary, return top letter
-        if (percent == 100 || percent > ranges.get(0).getMax()) {
+        if (percent > 100) {
             return ranges.get(0).getLetter();
         }
+        if (percent < 0) {
+            return ranges.get(ranges.size() - 1).getLetter();
+        }
+        // inclusive min/max so values exactly on a boundary still match (needed after curve shift)
         for (GradeRange r : ranges) {
-            if ((r.getMax() > percent) && (r.getMin() <= percent)) {
+            if (percent >= r.getMin() && percent <= r.getMax()) {
                 return r.getLetter();
             }
         }

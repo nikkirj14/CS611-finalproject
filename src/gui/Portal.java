@@ -9,6 +9,8 @@ import core.Assignment;
 import core.Course;
 import core.CourseManager;
 import core.GradeRange;
+import core.ScaleLetterRefresh;
+import core.StudentImportCsv;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -49,7 +51,8 @@ public class Portal extends JFrame implements ActionListener {
         // top panel
         JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
 
-        coursesButton = new JButton("Courses ");
+        coursesButton = new JButton("Courses");
+        coursesButton.setActionCommand("courses_menu");
         coursesButton.addActionListener(this);
 
         addCourseButton = new JButton("Add Course");
@@ -108,19 +111,11 @@ public class Portal extends JFrame implements ActionListener {
             if (file == null)
                 return;
 
-            List<Student> students = f.parseScores(file);
-            for (Student s : students) {
-                currentCourse.addStudent(s);
-            }
-
-            grader.calculateFinalPercentsForCourse(currentCourse);
-            grader.assignLetterGradesForCourse(currentCourse);
-
-            showCourseView(currentCourse);
+            runStudentCsvImport(currentCourse, file);
         }
 
         // show course dropdown
-        if (e.getActionCommand().equals("Courses v")) {
+        if (e.getActionCommand().equals("courses_menu")) {
             JPopupMenu popupMenu = new JPopupMenu();
             List<Course> courses = courseManager.getCourses();
             if (courses != null) {
@@ -196,6 +191,8 @@ public class Portal extends JFrame implements ActionListener {
             JMenuItem removeAssignment = new JMenuItem("Remove Assignment");
             JMenuItem adjustWeights = new JMenuItem("Adjust Weights");
             JMenuItem adjustBoundaries = new JMenuItem("Adjust Grade Boundaries");
+            JMenuItem curveToTop = new JMenuItem("Curve scale to top student");
+            JMenuItem resetGradeScale = new JMenuItem("Reset grade scale to default");
             JMenuItem markInactive = new JMenuItem("Mark Student Inactive");
             JMenuItem removeCourse = new JMenuItem("Remove Course");
 
@@ -204,18 +201,22 @@ public class Portal extends JFrame implements ActionListener {
                 File file = f.importFile(this);
                 if (file == null)
                     return;
-                List<Student> students = f.parseScores(file);
-                for (Student s : students)
-                    course.addStudent(s);
-                grader.calculateFinalPercentsForCourse(course);
-                grader.assignLetterGradesForCourse(course);
-                showCourseView(course);
+                runStudentCsvImport(course, file);
             });
 
             addAssignment.addActionListener(e -> addAssignment(course));
             removeAssignment.addActionListener(e -> removeAssignment(course));
             adjustWeights.addActionListener(e -> adjustWeights(course));
             adjustBoundaries.addActionListener(e -> adjustBoundaries(course));
+            curveToTop.addActionListener(e -> {
+                grader.applyTopScoreShift(course);
+                showCourseView(course);
+            });
+            resetGradeScale.addActionListener(e -> {
+                course.getGradeScale().resetToDefault();
+                grader.assignLetterGradesForCourse(course);
+                showCourseView(course);
+            });
             markInactive.addActionListener(e -> markStudentInactive(course));
             removeCourse.addActionListener(e -> {
                 courseManager.removeCourse(course.getCourseId());
@@ -227,6 +228,8 @@ public class Portal extends JFrame implements ActionListener {
             editMenu.add(removeAssignment);
             editMenu.add(adjustWeights);
             editMenu.add(adjustBoundaries);
+            editMenu.add(curveToTop);
+            editMenu.add(resetGradeScale);
             editMenu.add(markInactive);
             editMenu.add(removeCourse);
 
@@ -239,8 +242,16 @@ public class Portal extends JFrame implements ActionListener {
         List<Assignment> assignments = course.getAssignments();
         String[] columns = new String[assignments.size() + 3];
         columns[0] = "Student";
+        double weightSum = grader.getTotalWeight(course);
         for (int i = 0; i < assignments.size(); i++) {
-            columns[i + 1] = assignments.get(i).getName();
+            Assignment a = assignments.get(i);
+            String name = a.getName();
+            if (weightSum > 0 && a.getWeight() > 0) {
+                double share = 100.0 * a.getWeight() / weightSum;
+                columns[i + 1] = String.format("%s (%.1f%%)", name, share);
+            } else {
+                columns[i + 1] = name + " (—)";
+            }
         }
         columns[columns.length - 2] = "Final %";
         columns[columns.length - 1] = "Grade";
@@ -295,6 +306,8 @@ public class Portal extends JFrame implements ActionListener {
 
                 Assignment a = new Assignment(name, weight, maxPoints, "");
                 course.addAssignment(a);
+                grader.calculateFinalPercentsForCourse(course);
+                grader.assignLetterGradesForCourse(course);
                 showCourseView(course);
             } catch (NumberFormatException ex) {
                 JOptionPane.showMessageDialog(this, "Weight and Max Points must be numbers.");
@@ -316,6 +329,8 @@ public class Portal extends JFrame implements ActionListener {
 
         if (selected != null) {
             assignments.removeIf(a -> a.getName().equals(selected));
+            grader.calculateFinalPercentsForCourse(course);
+            grader.assignLetterGradesForCourse(course);
             showCourseView(course);
         }
     }
@@ -360,37 +375,64 @@ public class Portal extends JFrame implements ActionListener {
 
     // adjust grade boundaries dialog
     private void adjustBoundaries(Course course) {
-        
+
         List<GradeRange> ranges = course.getGradeScale().getRanges();
 
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         JTextField[] minFields = new JTextField[ranges.size()];
+        JTextField[] maxFields = new JTextField[ranges.size()];
 
         for (int i = 0; i < ranges.size(); i++) {
             GradeRange r = ranges.get(i);
             JPanel row = new JPanel(new FlowLayout(FlowLayout.LEFT));
-            row.add(new JLabel(String.format("%-4s  max: %5.1f   min:", r.getLetter(), r.getMax())));
+            row.add(new JLabel(String.format("%-4s", r.getLetter())));
+            row.add(new JLabel("min"));
             minFields[i] = new JTextField(String.valueOf(r.getMin()), 6);
             row.add(minFields[i]);
+            row.add(new JLabel("max"));
+            maxFields[i] = new JTextField(String.valueOf(r.getMax()), 6);
+            row.add(maxFields[i]);
             panel.add(row);
         }
 
-        int result = JOptionPane.showConfirmDialog(this, panel, "Adjust Grade Boundaries", JOptionPane.OK_CANCEL_OPTION);
+        int result = JOptionPane.showConfirmDialog(this, panel, "Adjust Grade Boundaries",
+                JOptionPane.OK_CANCEL_OPTION);
 
         if (result == JOptionPane.OK_OPTION) {
             try {
+                boolean ok = true;
                 for (int i = 0; i < ranges.size(); i++) {
                     GradeRange r = ranges.get(i);
                     double newMin = Double.parseDouble(minFields[i].getText().trim());
-                    course.getGradeScale().updateRange(r.getLetter(), newMin, r.getMax());
+                    double newMax = Double.parseDouble(maxFields[i].getText().trim());
+                    if (!course.getGradeScale().updateRange(r.getLetter(), newMin, newMax)) {
+                        JOptionPane.showMessageDialog(this,
+                                "could not apply range for " + r.getLetter() + " (check ordering vs other letters)");
+                        ok = false;
+                        break;
+                    }
                 }
-                grader.assignLetterGradesForCourse(course);
-                showCourseView(course);
+                if (ok) {
+                    grader.assignLetterGradesForCourse(course);
+                    showCourseView(course);
+                }
             } catch (NumberFormatException ex) {
                 JOptionPane.showMessageDialog(this, "All values must be numbers.");
             }
         }
+    }
+
+    // merge csv into course (creates assignment columns if missing) then grade
+    private void runStudentCsvImport(Course course, File file) {
+        StudentImportCsv importer = new StudentImportCsv();
+        if (!importer.mergeFromFile(course, file.getAbsolutePath())) {
+            JOptionPane.showMessageDialog(this, "could not read that file.");
+            return;
+        }
+        grader.calculateFinalPercentsForCourse(course);
+        grader.assignLetterGradesForCourse(course);
+        showCourseView(course);
     }
 
     // mark student inactive dialog
@@ -419,6 +461,7 @@ public class Portal extends JFrame implements ActionListener {
             return;
         if (scaleLetterRefreshDone.contains(course))
             return;
+        ScaleLetterRefresh.attach(course, grader);
         scaleLetterRefreshDone.add(course);
     }
 
