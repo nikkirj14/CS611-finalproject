@@ -20,15 +20,15 @@ public class Gradebook {
     }
 
     // create a blank course
-    public Course createBlankCourse(String name, String id) {
-        Course course = courseFactory.createBlankCourse(name, id);
+    public Course createBlankCourse(String name, String id, String term) {
+        Course course = courseFactory.createBlankCourse(name, id, term);
         courses.add(course);
         return course;
     }
 
     // create a course by porting from another course
-    public Course createPortedCourse(String name, String id, Course sourceCourse) {
-        Course course = courseFactory.createPortedCourse(name, id, sourceCourse);
+    public Course createPortedCourse(String name, String id, String term, Course sourceCourse) {
+        Course course = courseFactory.createPortedCourse(name, id, term, sourceCourse);
         courses.add(course);
         return course;
     }

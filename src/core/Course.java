@@ -7,22 +7,25 @@ import java.util.ArrayList;
 public class Course {
     protected String courseId;
     protected String courseName;
+    protected String term;
     protected ArrayList<Assignment> assignments;
     protected ArrayList<Student> students;
     protected GradeScale gradeScale;
 
     // constructor
-    public Course(String name, String id) {
+    public Course(String name, String id, String term) {
         this.courseName = name;
         this.courseId = id;
+        this.term = term;
         this.gradeScale = new GradeScale();
         this.assignments = new ArrayList<>();
         this.students = new ArrayList<>();
     }
 
-    public Course(String name, String id, ArrayList<Assignment> assignments) {
+    public Course(String name, String id, String term, ArrayList<Assignment> assignments) {
         this.courseName = name;
         this.courseId = id;
+        this.term = term;
         this.assignments = assignments;
         this.gradeScale = new GradeScale();
         this.students = new ArrayList<>();
@@ -77,6 +80,15 @@ public class Course {
 
     public String getCourseId() {
         return courseId;
+    }
+
+    public String getTerm() {
+        return term;
+    }
+
+    public String getCourseIdAndTerm() {
+        return courseId + " (" + term + ")";
+        // return courseId  + "-" + term;
     }
 
     public void setCourseId(String courseId) {

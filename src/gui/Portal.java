@@ -48,6 +48,7 @@ public class Portal extends JFrame implements ActionListener {
 
     private JTextField courseNameField;
     private JTextField courseIdField;
+    private JTextField courseTermField;
     private Course currentCourse;
 
     private Grader grader;
@@ -177,12 +178,14 @@ public class Portal extends JFrame implements ActionListener {
         addCoursePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         courseNameField = new JTextField(15);
         courseIdField = new JTextField(15);
+        courseTermField = new JTextField(15);
         JButton submitButton = new JButton("Submit");
         submitButton.addActionListener(e -> handleInitCourse());
         JButton cancelAddCourseButton = new JButton("Cancel");
         cancelAddCourseButton.addActionListener(e -> {
             courseNameField.setText("");
             courseIdField.setText("");
+            courseTermField.setText("");
             addCoursePanel.setVisible(false);
             revalidate();
             repaint();
@@ -192,6 +195,8 @@ public class Portal extends JFrame implements ActionListener {
         addCoursePanel.add(courseNameField);
         addCoursePanel.add(new JLabel("Course ID:"));
         addCoursePanel.add(courseIdField);
+        addCoursePanel.add(new JLabel("Term:"));
+        addCoursePanel.add(courseTermField);
         addCoursePanel.add(submitButton);
         addCoursePanel.add(cancelAddCourseButton);
         addCoursePanel.setVisible(false);
@@ -225,7 +230,7 @@ public class Portal extends JFrame implements ActionListener {
             List<Course> courses = courseManager.getCourses();
             if (courses != null) {
                 for (Course c : courses) {
-                    JMenuItem item = new JMenuItem(c.getCourseId());
+                    JMenuItem item = new JMenuItem(c.getCourseIdAndTerm());
                     item.addActionListener(ev -> showCourseView(c));
                     popupMenu.add(item);
                 }
@@ -304,7 +309,8 @@ public class Portal extends JFrame implements ActionListener {
     private static String courseTitleHtml(Course course) {
         return "<html><div style='text-align:center'><b>Course:</b> "
                 + htmlEscape(course.getCourseName()) + " &nbsp;&nbsp; <b>ID:</b> "
-                + htmlEscape(course.getCourseId()) + "</div></html>";
+                + htmlEscape(course.getCourseId()) + " &nbsp;&nbsp; <b>Term:</b> "
+                + htmlEscape(course.getTerm()) + "</div></html>";
     }
 
     private static String courseHomeRowHtml(Course course) {
@@ -312,7 +318,8 @@ public class Portal extends JFrame implements ActionListener {
         int active = course.getActiveStudents().size();
         return "<html><div style='text-align:center'><b>Course:</b> "
                 + htmlEscape(course.getCourseName()) + " &nbsp;&nbsp; <b>ID:</b> "
-                + htmlEscape(course.getCourseId()) + "<br/>"
+                + htmlEscape(course.getCourseId()) + " &nbsp;&nbsp; <b>Term:</b> "
+                + htmlEscape(course.getTerm()) + "<br/>"
                 + "Enrolled: " + enrolled + " &nbsp;&middot;&nbsp; Active: " + active
                 + "</div></html>";
     }
@@ -852,13 +859,14 @@ public class Portal extends JFrame implements ActionListener {
     private void handleInitCourse() {
         String courseName = courseNameField.getText().trim();
         String courseId = courseIdField.getText().trim();
+        String courseTerm = courseTermField.getText().trim();
 
-        if (courseName.isEmpty() || courseId.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Please enter both Course Name and ID");
+        if (courseName.isEmpty() || courseId.isEmpty() || courseTerm.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Please enter Course Name, ID, and Term");
             return;
         }
 
-        courseManager.createBlankCourse(courseName, courseId);
+        courseManager.createBlankCourse(courseName, courseId, courseTerm);
 
         Course newCourse = courseManager.getCourseById(courseId);
         if (newCourse != null) {

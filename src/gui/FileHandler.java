@@ -125,17 +125,18 @@ public class FileHandler {
 
                 String courseId = parts[0].trim();
                 String courseName = parts[1].trim();
-                String assignmentName = parts[2].trim();
-                double weight = Double.parseDouble(parts[3].trim().replace("\r", ""));
-                double maxPoints = Double.parseDouble(parts[4].trim().replace("\r", ""));
+                String courseTerm = parts[2].trim();
+                String assignmentName = parts[3].trim();
+                double weight = Double.parseDouble(parts[4].trim().replace("\r", ""));
+                double maxPoints = Double.parseDouble(parts[5].trim().replace("\r", ""));
                 
-                String note = (parts.length >= 6) ? parts[5].trim() : "";
+                String note = (parts.length >= 7) ? parts[6].trim() : "";
 
-                System.out.println("Parsed line - Course ID: " + courseId + ", Course Name: " + courseName + ", Assignment Name: " + assignmentName + ", Weight: " + weight + ", Max Points: " + maxPoints + ", Note: " + note);
+                System.out.println("Parsed line - Course ID: " + courseId + ", Course Name: " + courseName + ", Course Term: " + courseTerm + ", Assignment Name: " + assignmentName + ", Weight: " + weight + ", Max Points: " + maxPoints + ", Note: " + note);
                 Course course = courses.get(courseId);
                 if (course == null) {
                     System.out.println("Creating new course: " + courseId + " - " + courseName);
-                    course = new Course(courseName, courseId);
+                    course = new Course(courseName, courseId, courseTerm);
                     courses.put(courseId, course);
                 } 
                 System.out.println("Adding assignment to course: " + courseId);
