@@ -3,6 +3,8 @@ package gui;
 
 import gui.FileHandler;
 import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
+
 import core.Grader;
 import core.Student;
 import core.Assignment;
@@ -191,9 +193,9 @@ public class Portal extends JFrame implements ActionListener {
             JMenuItem removeAssignment = new JMenuItem("Remove Assignment");
             JMenuItem adjustWeights = new JMenuItem("Adjust Weights");
             JMenuItem adjustBoundaries = new JMenuItem("Adjust Grade Boundaries");
-            JMenuItem curveToTop = new JMenuItem("Curve scale to top student");
-            JMenuItem resetGradeScale = new JMenuItem("Reset grade scale to default");
-            JMenuItem markInactive = new JMenuItem("Mark Student Inactive");
+            JMenuItem curveToTop = new JMenuItem("Curve Scale to Top Student");
+            JMenuItem resetGradeScale = new JMenuItem("Reset Grade Scale to Default");
+            JMenuItem markInactive = new JMenuItem("Set Student Activity");
             JMenuItem removeCourse = new JMenuItem("Remove Course");
 
             importGrades.addActionListener(e -> {
@@ -217,7 +219,7 @@ public class Portal extends JFrame implements ActionListener {
                 grader.assignLetterGradesForCourse(course);
                 showCourseView(course);
             });
-            markInactive.addActionListener(e -> markStudentInactive(course));
+            markInactive.addActionListener(e -> editStudentActivity(course));
             removeCourse.addActionListener(e -> {
                 courseManager.removeCourse(course.getCourseId());
                 refreshCourseList();
@@ -238,38 +240,45 @@ public class Portal extends JFrame implements ActionListener {
         topBar.add(editBtn);
         courseDisplay.add(topBar, BorderLayout.NORTH);
 
-        // build table columns
+        // build table columns (status text + normalized weight percent per assignment)
         List<Assignment> assignments = course.getAssignments();
-        String[] columns = new String[assignments.size() + 3];
+        String[] columns = new String[assignments.size() + 4];
         columns[0] = "Student";
+        columns[1] = "Active Status";
         double weightSum = grader.getTotalWeight(course);
         for (int i = 0; i < assignments.size(); i++) {
             Assignment a = assignments.get(i);
             String name = a.getName();
             if (weightSum > 0 && a.getWeight() > 0) {
                 double share = 100.0 * a.getWeight() / weightSum;
-                columns[i + 1] = String.format("%s (%.1f%%)", name, share);
+                columns[i + 2] = String.format("%s (%.1f%%)", name, share);
             } else {
-                columns[i + 1] = name + " (—)";
+                columns[i + 2] = name + " (—)";
             }
         }
         columns[columns.length - 2] = "Final %";
         columns[columns.length - 1] = "Grade";
 
-        // build table rows from active students
-        List<Student> students = course.getActiveStudents();
+        // all students in roster (inactive still shown)
+        List<Student> students = course.getStudents();
         Object[][] data = new Object[students.size()][columns.length];
         for (int i = 0; i < students.size(); i++) {
             Student s = students.get(i);
             data[i][0] = s.getName();
+            data[i][1] = s.isActive() ? "Active" : "Inactive";
             for (int j = 0; j < assignments.size(); j++) {
-                data[i][j + 1] = s.getScore(assignments.get(j).getName());
+                data[i][j + 2] = s.getScore(assignments.get(j).getName());
             }
             data[i][columns.length - 2] = String.format("%.1f%%", s.getFinalPercent());
             data[i][columns.length - 1] = s.getLetterGrade();
         }
 
-        JTable table = new JTable(data, columns);
+        DefaultTableModel tableModel = new DefaultTableModel(data, columns) {
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+        JTable table = new JTable(tableModel);
         table.setFillsViewportHeight(true);
         courseDisplay.add(new JScrollPane(table), BorderLayout.CENTER);
 
@@ -396,8 +405,7 @@ public class Portal extends JFrame implements ActionListener {
             panel.add(row);
         }
 
-        int result = JOptionPane.showConfirmDialog(this, panel, "Adjust Grade Boundaries",
-                JOptionPane.OK_CANCEL_OPTION);
+        int result = JOptionPane.showConfirmDialog(this, panel, "Adjust Grade Boundaries", JOptionPane.OK_CANCEL_OPTION);
 
         if (result == JOptionPane.OK_OPTION) {
             try {
@@ -435,22 +443,34 @@ public class Portal extends JFrame implements ActionListener {
         showCourseView(course);
     }
 
-    // mark student inactive dialog
-    private void markStudentInactive(Course course) {
+    // checkboxes: checked = active, unchecked = inactive
+    private void editStudentActivity(Course course) {
         List<Student> students = course.getStudents();
         if (students.isEmpty()) {
             JOptionPane.showMessageDialog(this, "No students in this course.");
             return;
         }
 
-        String[] names = students.stream().map(Student::getName).toArray(String[]::new);
-        String selected = (String) JOptionPane.showInputDialog(this, "Select student to mark inactive:",
-                "Mark Inactive", JOptionPane.PLAIN_MESSAGE, null, names, names[0]);
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        JCheckBox[] boxes = new JCheckBox[students.size()];
+        for (int i = 0; i < students.size(); i++) {
+            Student s = students.get(i);
+            boxes[i] = new JCheckBox(s.getName() + "  (" + s.getStudentId() + ")", s.isActive());
+            panel.add(boxes[i]);
+        }
 
-        if (selected != null) {
-            students.stream()
-                    .filter(s -> s.getName().equals(selected))
-                    .forEach(s -> s.setActive(false));
+        JScrollPane scroll = new JScrollPane(panel);
+        scroll.setPreferredSize(new Dimension(440, 300));
+
+        int result = JOptionPane.showConfirmDialog(this, scroll, "Student activity (checked = active)",
+                JOptionPane.OK_CANCEL_OPTION);
+
+        if (result == JOptionPane.OK_OPTION) {
+            for (int i = 0; i < students.size(); i++) {
+                students.get(i).setActive(boxes[i].isSelected());
+            }
+            grader.assignLetterGradesForCourse(course);
             showCourseView(course);
         }
     }

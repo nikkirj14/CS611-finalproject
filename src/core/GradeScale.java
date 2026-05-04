@@ -63,11 +63,18 @@ public class GradeScale {
                 new GradeRange(LETTER_F, 0, 60)));
     }
 
-    // shift all ranges so top score maps to 100
+    // shift ranges by top score; keep highest letter max at 100 for later higher scores
     public void shiftToTopScore(double topScore) {
         double dif = 100 - topScore;
-        for (GradeRange r : ranges) {
-            r.setRange(r.getMin() - dif, r.getMax() - dif);
+        for (int i = 0; i < ranges.size(); i++) {
+            GradeRange r = ranges.get(i);
+            double oldMin = r.getMin();
+            double oldMax = r.getMax();
+            if (i == 0) {
+                r.setRange(oldMin - dif, 100);
+            } else {
+                r.setRange(oldMin - dif, oldMax - dif);
+            }
         }
         notifyObservers();
     }
