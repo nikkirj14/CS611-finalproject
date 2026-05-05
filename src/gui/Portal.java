@@ -732,7 +732,7 @@ public class Portal extends JFrame implements ActionListener {
 
         Object[] fields = {
                 "Assignment Name:", nameField,
-                "Weight (e.g. 0.20):", weightField,
+                "Weight (e.g. 20):", weightField,
                 "Max Points:", maxPointsField
         };
 
