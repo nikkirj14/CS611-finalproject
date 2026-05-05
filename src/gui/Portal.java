@@ -453,11 +453,16 @@ public class Portal extends JFrame implements ActionListener {
     chartWrap.setBorder(BorderFactory.createTitledBorder("Letter Counts"));
     chartWrap.add(letterChart);
 
+    JPanel underChart = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
+    JLabel gradeDistLabel = new JLabel(buildGradeDistLabel(course));
+    underChart.add(gradeDistLabel);
+
     JPanel topStack = new JPanel();
     topStack.setLayout(new BoxLayout(topStack, BoxLayout.Y_AXIS));
     topStack.setBorder(BorderFactory.createEmptyBorder(10, 0, 0, 0));
     topStack.add(statsRow);
     topStack.add(chartWrap);
+    topStack.add(underChart);
 
     courseDisplay.add(topStack, BorderLayout.NORTH);
 
@@ -848,6 +853,20 @@ public class Portal extends JFrame implements ActionListener {
                 passing, st.activeCount, 100.0 * passing / st.activeCount));
 
         sb.append("</body></html>");
+        return sb.toString();
+    }
+
+    private String buildGradeDistLabel(Course course) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("\n");
+        List<GradeRange> ranges = course.getGradeScale().getRanges();
+        for (GradeRange r : ranges) {
+            sb.append(String.format("%s \u2265 %.0f , ", r.getLetter(), r.getMin()));
+        }
+        if (sb.length() > 0) {
+            sb.setLength(sb.length() - 3); 
+        }
+        sb.append("\n");
         return sb.toString();
     }
 

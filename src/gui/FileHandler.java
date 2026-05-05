@@ -132,18 +132,13 @@ public class FileHandler {
                 
                 String note = (parts.length >= 7) ? parts[6].trim() : "";
 
-                System.out.println("Parsed line - Course ID: " + courseId + ", Course Name: " + courseName + ", Course Term: " + courseTerm + ", Assignment Name: " + assignmentName + ", Weight: " + weight + ", Max Points: " + maxPoints + ", Note: " + note);
                 Course course = courses.get(courseId);
                 if (course == null) {
-                    System.out.println("Creating new course: " + courseId + " - " + courseName);
                     course = new Course(courseName, courseId, courseTerm);
                     courses.put(courseId, course);
                 } 
-                System.out.println("Adding assignment to course: " + courseId);
                 Assignment assignment = new Assignment(assignmentName, weight, maxPoints, note);
-                System.out.println("Created assignment: " + assignmentName + " with weight " + weight + " and max points " + maxPoints);
                 course.addAssignment(assignment);
-                System.out.println("Added assignment '" + assignmentName + "' to course '" + courseId + "' with weight " + weight + " and max points " + maxPoints);
             }
 
         } catch (Exception ex) {
@@ -163,7 +158,6 @@ public class FileHandler {
     }
 
     public Map<String, Course> loadData(String filePath) {
-        System.out.println("Loading data from: " + filePath);
         File file = new File(filePath);
         Map<String, Course> courses = new HashMap<>();
 

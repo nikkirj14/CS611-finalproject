@@ -23,7 +23,6 @@ public class Main {
     CourseManager courseManager = new CourseManager();
     if (args != null && args.length > 0) {
         String filePath = args[0];
-        System.out.println("Attempting to load data from: " + filePath);
         if (!courseManager.populatePriorCourses(filePath)) {
             System.out.println("Failed to load data from: " + filePath);
             return;

@@ -35,7 +35,6 @@ public class CourseManager {
         }
     }
 
-    System.out.println("Loaded " + priorCourses.size() + " courses from: " + filePath);
     return true;
     }
 
