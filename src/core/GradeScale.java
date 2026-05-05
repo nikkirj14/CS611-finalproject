@@ -88,6 +88,16 @@ public class GradeScale {
                 r.setRange(oldMin - dif, oldMax - dif);
             }
         }
+
+        // ensure F is not negative
+        GradeRange f = ranges.get(ranges.size() - 1);
+        if (f.getMin() < 0) {
+            double newMax = f.getMax();
+            if (newMax < 0) {
+                newMax = 0;
+            }
+            f.setRange(0, newMax);
+        }
         notifyObservers();
     }
 
@@ -112,6 +122,11 @@ public class GradeScale {
         // raw final % can still be above the curved A+ max, treat as A+
         if (percent > topRange.getMax() && percent <= 100.0) {
             return topRange.getLetter();
+        }
+        // if something falls below the last bucket's min, treat it as F
+        GradeRange bottomRange = ranges.get(ranges.size() - 1);
+        if (percent < bottomRange.getMin()) {
+            return bottomRange.getLetter();
         }
         // inclusive min/max so values exactly on a boundary still match (needed after
         // curve shift)
