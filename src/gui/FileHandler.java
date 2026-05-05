@@ -125,16 +125,15 @@ public class FileHandler {
 
                 String courseId = parts[0].trim();
                 String courseName = parts[1].trim();
-                String courseTerm = parts[2].trim();
-                String assignmentName = parts[3].trim();
-                double weight = Double.parseDouble(parts[4].trim().replace("\r", ""));
-                double maxPoints = Double.parseDouble(parts[5].trim().replace("\r", ""));
+                String assignmentName = parts[2].trim();
+                double weight = Double.parseDouble(parts[3].trim().replace("\r", ""));
+                double maxPoints = Double.parseDouble(parts[4].trim().replace("\r", ""));
                 
-                String note = (parts.length >= 7) ? parts[6].trim() : "";
+                String note = (parts.length >= 6) ? parts[5].trim() : "";
 
                 Course course = courses.get(courseId);
                 if (course == null) {
-                    course = new Course(courseName, courseId, courseTerm);
+                    course = new Course(courseName, courseId);
                     courses.put(courseId, course);
                 } 
                 Assignment assignment = new Assignment(assignmentName, weight, maxPoints, note);

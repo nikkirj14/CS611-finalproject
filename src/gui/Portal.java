@@ -49,7 +49,6 @@ public class Portal extends JFrame implements ActionListener {
 
     private JTextField courseNameField;
     private JTextField courseIdField;
-    private JTextField courseTermField;
     private Course currentCourse;
 
     private Grader grader;
@@ -197,14 +196,12 @@ public class Portal extends JFrame implements ActionListener {
         addCoursePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         courseNameField = new JTextField(15);
         courseIdField = new JTextField(15);
-        courseTermField = new JTextField(15);
         JButton submitButton = new JButton("Submit");
         submitButton.addActionListener(e -> handleInitCourse());
         JButton cancelAddCourseButton = new JButton("Cancel");
         cancelAddCourseButton.addActionListener(e -> {
             courseNameField.setText("");
             courseIdField.setText("");
-            courseTermField.setText("");
             addCoursePanel.setVisible(false);
             revalidate();
             repaint();
@@ -214,8 +211,6 @@ public class Portal extends JFrame implements ActionListener {
         addCoursePanel.add(courseNameField);
         addCoursePanel.add(new JLabel("Course ID:"));
         addCoursePanel.add(courseIdField);
-        addCoursePanel.add(new JLabel("Term:"));
-        addCoursePanel.add(courseTermField);
         addCoursePanel.add(submitButton);
         addCoursePanel.add(cancelAddCourseButton);
         addCoursePanel.setVisible(false);
@@ -249,7 +244,7 @@ public class Portal extends JFrame implements ActionListener {
             List<Course> courses = courseManager.getCourses();
             if (courses != null) {
                 for (Course c : courses) {
-                    JMenuItem item = new JMenuItem(c.getCourseIdAndTerm());
+                    JMenuItem item = new JMenuItem(c.getCourseId());
                     item.addActionListener(ev -> showCourseView(c));
                     popupMenu.add(item);
                 }
@@ -361,8 +356,7 @@ public class Portal extends JFrame implements ActionListener {
     private static String courseTitleHtml(Course course) {
         return "<html><div style='text-align:center'><b>Course:</b> "
                 + htmlEscape(course.getCourseName()) + " &nbsp;&nbsp; <b>ID:</b> "
-                + htmlEscape(course.getCourseId()) + " &nbsp;&nbsp; <b>Term:</b> "
-                + htmlEscape(course.getTerm()) + "</div></html>";
+                + htmlEscape(course.getCourseId()) + " </div></html>";
     }
 
     private static String courseHomeRowHtml(Course course) {
@@ -370,8 +364,7 @@ public class Portal extends JFrame implements ActionListener {
         int active = course.getActiveStudents().size();
         return "<html><div style='text-align:center'><b>Course:</b> "
                 + htmlEscape(course.getCourseName()) + " &nbsp;&nbsp; <b>ID:</b> "
-                + htmlEscape(course.getCourseId()) + " &nbsp;&nbsp; <b>Term:</b> "
-                + htmlEscape(course.getTerm()) + "<br/>"
+                + htmlEscape(course.getCourseId()) + " &nbsp;&nbsp; <br/>"
                 + "Enrolled: " + enrolled + " &nbsp;&middot;&nbsp; Active: " + active
                 + "</div></html>";
     }
@@ -441,7 +434,7 @@ public class Portal extends JFrame implements ActionListener {
         JMenuItem byStudent = new JMenuItem("By Student");
 
         byAssignment.addActionListener(e -> {
-                // displayAssignmentSelectionDialog(course);
+                displayAssignmentSelectionDialog(course);
             });
 
         byStudent.addActionListener(e -> {
@@ -452,6 +445,36 @@ public class Portal extends JFrame implements ActionListener {
         displayMenu.add(byStudent);
 
         displayMenu.show(anchor, 0, anchor.getHeight());
+    }
+
+    private void displayAssignmentSelectionDialog(Course course) {
+        List<Student> students = course.getActiveStudents();
+        List<Assignment> assignments = course.getAssignments();
+        if (assignments.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "No assignments with scores to display.");
+            return; 
+        }
+
+        String[] names = new String[assignments.size()];
+        for (int i = 0; i < assignments.size(); i++) {
+            names[i] = assignments.get(i).getName();
+        }
+
+        String selected = (String) JOptionPane.showInputDialog(this, "Select an assignment:",
+                "Assignment Selection", JOptionPane.PLAIN_MESSAGE, null, names, names[0]);
+
+        if (selected != null) {
+            Assignment chosen = null;
+            for (Assignment a : assignments) {
+                if (a.getName().equals(selected)) {
+                    chosen = a;
+                    break;
+                }
+            }
+            if (chosen != null) {
+                showAssignmentGraph(students, chosen, course.getGradeScale().getRanges());
+            }
+        }
     }
 
     private void displayStudentSelectionDialog(Course course) {
@@ -510,12 +533,22 @@ public class Portal extends JFrame implements ActionListener {
         System.out.println("Displaying graph for student: " + student.getName());
     }
 
-    // private void displayAssignmentByStudent(Course course) {
-    //     Stats st = new Stats();
-    //     st.statsByStudent(course);
-    //     AssignmentStatsDialog dialog = new AssignmentStatsDialog(this, st, course);
-    //     dialog.setVisible(true);
-    // }
+    private void showAssignmentGraph(List<Student> students, Assignment assignment, List<GradeRange> gradeRanges) {
+        List<Double> scores = new ArrayList<>();
+        for (Student s : students) {
+            Double score = s.getScore(assignment.getName());
+            scores.add(score);
+        }
+        StatsByAssignmentChartPanel panel = new StatsByAssignmentChartPanel(scores, gradeRanges);
+
+        JDialog dialog = new JDialog(this, assignment.getName() + " - Score Distribution", true);
+        dialog.setLayout(new BorderLayout());
+        dialog.add(panel, BorderLayout.CENTER);
+
+        dialog.setSize(600, 300);
+        dialog.setLocationRelativeTo(this);
+        dialog.setVisible(true);
+    }
 
     // show course detail view with student grade table
  private void showCourseView(Course course) {
@@ -1040,14 +1073,13 @@ public class Portal extends JFrame implements ActionListener {
     private void handleInitCourse() {
         String courseName = courseNameField.getText().trim();
         String courseId = courseIdField.getText().trim();
-        String courseTerm = courseTermField.getText().trim();
 
-        if (courseName.isEmpty() || courseId.isEmpty() || courseTerm.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Please enter Course Name, ID, and Term");
+        if (courseName.isEmpty() || courseId.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Please enter Course Name and ID.");
             return;
         }
 
-        courseManager.createBlankCourse(courseName, courseId, courseTerm);
+        courseManager.createBlankCourse(courseName, courseId);
 
         Course newCourse = courseManager.getCourseById(courseId);
         if (newCourse != null) {

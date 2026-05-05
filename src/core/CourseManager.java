@@ -70,12 +70,12 @@ public class CourseManager {
         return courses.get(courseId);
     }
 
-    public void createBlankCourse(String name, String id, String term) {
-        if (name == null || id == null || term == null) {
-            System.out.println("Course name, ID, and term cannot be null.");
+    public void createBlankCourse(String name, String id) {
+        if (name == null || id == null) {
+            System.out.println("Course name and ID cannot be null.");
             return;
         }
-        Course course = new Course(name, id, term);
+        Course course = new Course(name, id);
         addCourse(course);
     }
 
