@@ -21,7 +21,6 @@ import java.awt.Color;
 import java.awt.BasicStroke;
 import java.awt.FontMetrics;
 
-
 public class StatsByAssignmentChartPanel extends JPanel{
     private LetterGradeBarChartPanel chartPanel;
     private  List<Double> scores;
@@ -47,6 +46,7 @@ public class StatsByAssignmentChartPanel extends JPanel{
         setPreferredSize(new Dimension(520, 180));
     }
 
+    // build the distribution of letter grade counts from the scores and grade ranges
     private HashMap<String, Integer> buildDistribution(List<Double> scores, List<GradeRange> ranges) {
         HashMap<String, Integer> counts = new HashMap<>();
 

@@ -24,6 +24,7 @@ public class LetterGradeBarChartPanel extends JPanel {
     private ArrayList<String> letterOrder;
     private Color barColor;
 
+    // constructor takes the letter grade counts, the ordered list of letters to display, and the color for the bars
     public LetterGradeBarChartPanel(HashMap<String, Integer> counts, ArrayList<GradeRange> ranges, Color barColor) {
         this.counts = counts != null ? counts : new HashMap<String, Integer>();
         this.letterOrder = new ArrayList<String>();
@@ -38,6 +39,7 @@ public class LetterGradeBarChartPanel extends JPanel {
         setPreferredSize(new Dimension(520, 152));
     }
 
+    // paint the bar chart based on the counts and letter order
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
         Graphics2D g2 = (Graphics2D) g;

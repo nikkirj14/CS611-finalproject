@@ -18,27 +18,28 @@ public class CourseManager {
         this.courses = new HashMap<>();
     }
     
+    // populate courses in course manager from a file of prior courses
     public boolean populatePriorCourses(String filePath) {
-    FileHandler f = new FileHandler();
-    if (!f.validateFile(new java.io.File(filePath))) {
-        System.out.println("Invalid file: " + filePath);
-        return false;
-    }
-
-    HashMap<String, Course> priorCourses = new HashMap<>(f.loadData(filePath));
-    if (priorCourses == null || priorCourses.isEmpty()) {
-        System.out.println("No courses loaded from: " + filePath);
-        return false;
-    }
-
-   
-    for (Map.Entry<String, Course> entry : priorCourses.entrySet()) {
-        if (!courses.containsKey(entry.getKey())) {
-            courses.put(entry.getKey(), entry.getValue());
+        FileHandler f = new FileHandler();
+        if (!f.validateFile(new java.io.File(filePath))) {
+            System.out.println("Invalid file: " + filePath);
+            return false;
         }
-    }
 
-    return true;
+        HashMap<String, Course> priorCourses = new HashMap<>(f.loadData(filePath));
+        if (priorCourses == null || priorCourses.isEmpty()) {
+            System.out.println("No courses loaded from: " + filePath);
+            return false;
+        }
+
+    
+        for (Map.Entry<String, Course> entry : priorCourses.entrySet()) {
+            if (!courses.containsKey(entry.getKey())) {
+                courses.put(entry.getKey(), entry.getValue());
+            }
+        }
+
+        return true;
     }
 
     public List<Course> getCourses() {
@@ -48,6 +49,7 @@ public class CourseManager {
     public Map<String, Course> getCourseMap() {
         return courses;
     }
+
 
     public void addCourse(Course course) {
         if (course == null || course.getCourseId() == null) {

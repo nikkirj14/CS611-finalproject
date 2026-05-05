@@ -6,5 +6,6 @@ package core;
 
 public interface GradeScaleObserver {
 
+    // called whenever ranges shift or reset
     void gradeScaleChanged();
 }

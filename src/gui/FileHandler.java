@@ -106,6 +106,7 @@ public class FileHandler {
         return students;
     }
 
+    // parse course weights from csv
     public Map<String, Course> parseWeights(File file) {
         Map<String, Course> courses = new HashMap<>();
 
@@ -152,6 +153,7 @@ public class FileHandler {
         return courses;
     }
 
+    // validate that the file is a csv and exists
     public boolean validateFile(File file) {
         if (file == null || !file.exists() || !file.isFile()) {
             return false;
@@ -159,6 +161,7 @@ public class FileHandler {
         return file.getName().toLowerCase().endsWith(".csv");
     }
 
+    // load data from a csv file into a map of courses, where each course contains its assignments and weights
     public Map<String, Course> loadData(String filePath) {
         File file = new File(filePath);
         Map<String, Course> courses = new HashMap<>();
@@ -172,6 +175,7 @@ public class FileHandler {
         return courses;
     }
 
+    // save course and assignment data to a csv file
     public boolean saveData(String filePath, Map<String, Course> courses) {
 
         try {

@@ -34,6 +34,7 @@ public class Assignment {
         this.weight = weight;
     }
 
+    
     public String getName() {
         return name;
     }

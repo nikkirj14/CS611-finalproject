@@ -65,18 +65,18 @@ public class Portal extends JFrame implements ActionListener {
     private JButton headerBackBtn;
     private FullWidthCenterHeaderBar topHeaderBar;
 
+    // constructor takes a course manager to access and modify courses, and sets up the main portal window with buttons and panels for displaying courses and stats
     public Portal(CourseManager c) {
         super("Grading Portal");
         this.courseManager = c;
         this.grader = new Grader();
         this.scaleLetterRefreshDone = new HashSet<Course>();
         setSize(1200, 800);
-        // setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
         addWindowListener(new WindowAdapter() {
+            // on window close, prompt to save changes and then exit
             @Override
             public void windowClosing(WindowEvent e) {
-                // if (isDirty) {
                     int result = JOptionPane.showConfirmDialog(
                         Portal.this,
                         "Save changes before exiting?",
@@ -96,12 +96,13 @@ public class Portal extends JFrame implements ActionListener {
 
         setLayout(new BorderLayout());
 
-        // top panel
+        // top header panel
         FullWidthCenterHeaderBar headerBar = new FullWidthCenterHeaderBar();
         headerBar.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(170, 170, 170)),
                 BorderFactory.createEmptyBorder(6, 10, 8, 10)));
 
+        // courses dropown button, add courses button, and save grades button in the top rightheader bar
         coursesButton = new JButton("Courses");
         coursesButton.setActionCommand("courses_menu");
         coursesButton.addActionListener(this);
@@ -133,18 +134,12 @@ public class Portal extends JFrame implements ActionListener {
         headerCourseTitle = new JLabel();
         headerCourseTitle.setVisible(false);
 
+        // title
         headerHomeTitle = new JLabel("GradeManager");
         headerHomeTitle.setFont(headerHomeTitle.getFont().deriveFont(Font.BOLD, 24f));
         headerHomeTitle.setVisible(true);
 
-        // headerAssignmentStatsBtn = new JButton("View Assignment Stats");
-        // headerAssignmentStatsBtn.setVisible(false);
-        // headerAssignmentStatsBtn.addActionListener(e -> {
-        //     if (currentCourse != null) {
-        //         showAssignmentStatsDialog(currentCourse);
-        //     }
-        // });
-
+        // edit course and view stats button in top left header, visible when course is open
         headerEditBtn = new JButton("Edit Course");
         headerEditBtn.setVisible(false);
         headerEditBtn.addActionListener(e -> {
@@ -165,7 +160,6 @@ public class Portal extends JFrame implements ActionListener {
         westHeader.setOpaque(false);
         westHeader.add(headerHomeTitle);
         westHeader.add(Box.createHorizontalStrut(10));
-        // westHeader.add(headerAssignmentStatsBtn);
         westHeader.add(headerEditBtn);
         westHeader.add(headerDisplayStatsBtn);
 
@@ -188,7 +182,7 @@ public class Portal extends JFrame implements ActionListener {
 
         add(headerBar, BorderLayout.NORTH);
 
-        // center panel
+        // center panel 
         centerPanel = new JPanel(new BorderLayout());
         courseDisplay = new JPanel();
         courseDisplay.setLayout(new BoxLayout(courseDisplay, BoxLayout.Y_AXIS));
@@ -202,7 +196,7 @@ public class Portal extends JFrame implements ActionListener {
         importButton.setVisible(false);
         centerPanel.add(importButton);
 
-        // add course panel (bottom)
+        // add course button at bottom 
         addCoursePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         courseNameField = new JTextField(15);
         courseIdField = new JTextField(15);
@@ -304,7 +298,6 @@ public class Portal extends JFrame implements ActionListener {
     private void setCourseHeaderVisible(boolean visible) {
         headerHomeTitle.setVisible(!visible);
         headerCourseTitle.setVisible(visible);
-        // headerAssignmentStatsBtn.setVisible(visible);
         headerDisplayStatsBtn.setVisible(visible);
         headerEditBtn.setVisible(visible);
         headerBackBtn.setVisible(visible);
@@ -368,6 +361,7 @@ public class Portal extends JFrame implements ActionListener {
                 + "</div></html>";
     }
 
+    // course home button
     private JButton buildCourseHomeButton(Course course) {
         int enrolled = course.getStudents() != null ? course.getStudents().size() : 0;
         int active = course.getActiveStudents().size();
@@ -396,6 +390,7 @@ public class Portal extends JFrame implements ActionListener {
         return btn;
     }
 
+    // event handler for all course modifications
     private void showEditCourseMenu(JButton anchor, Course course) {
         JPopupMenu editMenu = new JPopupMenu();
 
@@ -455,6 +450,7 @@ public class Portal extends JFrame implements ActionListener {
         editMenu.show(anchor, 0, anchor.getHeight());
     }
 
+    // show stats menu for a course with options to view by assignment or by student
     private void showCourseStatsMenu(JButton anchor, Course course) {
         JPopupMenu displayMenu = new JPopupMenu();
         JMenuItem byAssignment = new JMenuItem("By Assignment");
@@ -474,6 +470,7 @@ public class Portal extends JFrame implements ActionListener {
         displayMenu.show(anchor, 0, anchor.getHeight());
     }
 
+    // display assignments in a dialog for the user to select and then show the graph for that assignment
     private void displayAssignmentSelectionDialog(Course course) {
         List<Student> students = course.getActiveStudents();
         List<Assignment> assignments = course.getAssignments();
@@ -504,6 +501,7 @@ public class Portal extends JFrame implements ActionListener {
         }
     }
 
+    // display students in a dialog for the user to select and then show the graph for that student
     private void displayStudentSelectionDialog(Course course) {
         DefaultListModel<String> model = new DefaultListModel<>();
         List<Student> students = course.getActiveStudents();

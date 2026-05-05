@@ -4,8 +4,8 @@ Simple grading portal for courses, students, assignments, and grade scales.
 
 ## How to compile and run
 ---------------------------------------------------------------------------
-1. From project root, run: `./run.sh`
-2. To load saved course data on start: `./run.sh StoredData.csv`
+1. From project root, run: `./src/main/run.sh`
+2. To load saved course data on start: `./src/main/run.sh StoredData.csv`
 
 ## Files
 ---------------------------------------------------------------------------

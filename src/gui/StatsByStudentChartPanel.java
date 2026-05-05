@@ -32,6 +32,7 @@ public class StatsByStudentChartPanel extends JPanel {
     new Color(170, 140, 160) 
 };
 
+    // constructor takes the student and their assignments to display
     public StatsByStudentChartPanel(Student student, List<Assignment> assignments)  {
         this.student = student;
         this.assignments = assignments;
@@ -39,6 +40,7 @@ public class StatsByStudentChartPanel extends JPanel {
         setPreferredSize(new Dimension(520, 180));
     }
 
+    // paint the bar chart of the student's scores on the assignments
     protected void paintComponent(Graphics g) {
                 super.paintComponent(g);
         Graphics2D g2 = (Graphics2D) g;

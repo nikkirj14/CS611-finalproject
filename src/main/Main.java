@@ -20,6 +20,7 @@ public class Main {
         e.printStackTrace();
     }
 
+    // initialize course manager and load prior courses if file path is provided
     CourseManager courseManager = new CourseManager();
     if (args != null && args.length > 0) {
         String filePath = args[0];
@@ -27,7 +28,7 @@ public class Main {
             System.out.println("Failed to load data from: " + filePath);
             return;
         }
-    }
+    } // launch the portal GUI with the course manager
     new Portal(courseManager).setVisible(true);
 }
     

@@ -5,7 +5,9 @@
 package core;
 
 public interface Factory {
+    // creates a blank course
     Course createBlankCourse(String name, String id);
 
+    // creates a new course by copying setup from another course
     Course createPortedCourse(String name, String id, Course sourceCourse);
 }

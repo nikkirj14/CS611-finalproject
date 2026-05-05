@@ -12,6 +12,7 @@ import java.util.ArrayList;
 
 public class CourseResultsCsv {
 
+    // export the course's students and their scores to a csv file
     public boolean exportToFile(Course course, String filePath) {
         if (course == null || filePath == null || filePath.length() == 0) {
             return false;

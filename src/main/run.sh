@@ -29,6 +29,4 @@ else
 fi
 
 
-# java -cp bin main/Main
-
 

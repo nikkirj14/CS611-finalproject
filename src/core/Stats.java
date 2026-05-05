@@ -29,6 +29,7 @@ public class Stats {
 
     }
 
+    // compute stats for each assignment in the course, including min, max, average, and median
     public Map<String, Map<String, Double>> statsByAssignment(Course course) {
         Map<String, Map<String, Double>> result = new HashMap<>();
 
@@ -63,6 +64,7 @@ public class Stats {
         return result;
     }
 
+    // calculates median of scores
     public Double calculateMedian(ArrayList<Double> scores) {
         Collections.sort(scores);
         int n = scores.size();
