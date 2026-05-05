@@ -32,6 +32,7 @@ public class StudentImportCsv {
                     ensureAssignment(course, headers[h].trim());
                 }
 
+                // each row either updates an existing student by id or inserts a new one
                 String line;
                 while ((line = reader.readLine()) != null) {
                     String[] parts = line.split(",");

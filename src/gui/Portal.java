@@ -661,6 +661,8 @@ public class Portal extends JFrame implements ActionListener {
     table.setFillsViewportHeight(true);
 
     tableModel.addTableModelListener(e -> {
+        // inline edits: notes update immediately; score edits also trigger
+        // final-percent + letter recompute for that course
         int row = e.getFirstRow();
         int col = e.getColumn();
         Student s = students.get(row);
@@ -1151,6 +1153,8 @@ public class Portal extends JFrame implements ActionListener {
         }
 
         public void doLayout() {
+            // custom layout so center title is centered across full header width,
+            // not just centered between left/right button groups
             synchronized (getTreeLock()) {
                 Insets in = getInsets();
                 int W = getWidth() - in.left - in.right;

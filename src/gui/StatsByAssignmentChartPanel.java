@@ -1,3 +1,5 @@
+// shows one assignment's score distribution by mapping scores into letter buckets
+
 package gui;
 
 

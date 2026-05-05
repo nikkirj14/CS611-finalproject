@@ -67,6 +67,7 @@ public class FileHandler {
 
             String[] headers = headerLine.split(",");
 
+            // rows are expected as: id,name,email,<assignment columns...>
             while ((line = reader.readLine()) != null) {
                 String[] parts = line.split(",");
 

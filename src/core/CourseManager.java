@@ -1,3 +1,5 @@
+// manages the set of courses and handles basic lookup/add/remove
+
 package core;
 
 import java.util.ArrayList;

@@ -1,3 +1,5 @@
+// computes summary stats used by the portal charts and labels
+
 package core;
 
 import java.lang.reflect.Array;
