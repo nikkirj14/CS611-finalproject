@@ -20,6 +20,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -55,6 +56,7 @@ public class Portal extends JFrame implements ActionListener {
     private HashSet<Course> scaleLetterRefreshDone;
 
     private JLabel headerCourseTitle;
+    private JButton headerAssignmentStatsBtn;
     private JButton headerEditBtn;
     private JButton headerBackBtn;
     private FullWidthCenterHeaderBar topHeaderBar;
@@ -127,6 +129,14 @@ public class Portal extends JFrame implements ActionListener {
         headerCourseTitle = new JLabel();
         headerCourseTitle.setVisible(false);
 
+        headerAssignmentStatsBtn = new JButton("View Assignment Stats");
+        headerAssignmentStatsBtn.setVisible(false);
+        headerAssignmentStatsBtn.addActionListener(e -> {
+            if (currentCourse != null) {
+                showAssignmentStatsDialog(currentCourse);
+            }
+        });
+
         headerEditBtn = new JButton("Edit Course");
         headerEditBtn.setVisible(false);
         headerEditBtn.addActionListener(e -> {
@@ -139,6 +149,7 @@ public class Portal extends JFrame implements ActionListener {
 
         JPanel westHeader = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
         westHeader.setOpaque(false);
+        westHeader.add(headerAssignmentStatsBtn);
         westHeader.add(headerEditBtn);
 
         headerBackBtn = new JButton("Home");
@@ -291,6 +302,7 @@ public class Portal extends JFrame implements ActionListener {
 
     private void setCourseHeaderVisible(boolean visible) {
         headerCourseTitle.setVisible(visible);
+        headerAssignmentStatsBtn.setVisible(visible);
         headerEditBtn.setVisible(visible);
         headerBackBtn.setVisible(visible);
         if (topHeaderBar != null) {
@@ -304,6 +316,37 @@ public class Portal extends JFrame implements ActionListener {
             return "";
         }
         return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
+    }
+
+    private void showAssignmentStatsDialog(Course course) {
+        Stats st = new Stats();
+        Map<String, Map<String, Double>> byAssign = st.statsByAssignment(course);
+        if (byAssign.isEmpty()) {
+            JOptionPane.showMessageDialog(this,
+                    "No raw scores entered for active students, or there are no assignments.");
+            return;
+        }
+
+        ArrayList<String> names = new ArrayList<String>(byAssign.keySet());
+        Collections.sort(names);
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("<html><body style='font-size:11px'>");
+        for (int i = 0; i < names.size(); i++) {
+            String name = names.get(i);
+            Map<String, Double> m = byAssign.get(name);
+            sb.append("<b>").append(htmlEscape(name)).append("</b><br/>");
+            sb.append(String.format(
+                    "&nbsp;&nbsp;Min: %.2f &nbsp; Max: %.2f &nbsp; Mean: %.2f &nbsp; Median: %.2f<br/><br/>",
+                    m.get("min"), m.get("max"), m.get("average"), m.get("median")));
+        }
+        sb.append("<div style='color:gray;font-size:10px'>Based on active students with a score for each assignment.</div>");
+        sb.append("</body></html>");
+
+        JLabel label = new JLabel(sb.toString());
+        JScrollPane scroll = new JScrollPane(label);
+        scroll.setPreferredSize(new Dimension(520, 340));
+        JOptionPane.showMessageDialog(this, scroll, "Assignment stats", JOptionPane.PLAIN_MESSAGE);
     }
 
     private static String courseTitleHtml(Course course) {
