@@ -669,19 +669,16 @@ public class Portal extends JFrame implements ActionListener {
 
         if (result == JOptionPane.OK_OPTION) {
             try {
-                boolean ok = true;
+                double[] newMins = new double[ranges.size()];
+                double[] newMaxs = new double[ranges.size()];
                 for (int i = 0; i < ranges.size(); i++) {
-                    GradeRange r = ranges.get(i);
-                    double newMin = Double.parseDouble(minFields[i].getText().trim());
-                    double newMax = Double.parseDouble(maxFields[i].getText().trim());
-                    if (!course.getGradeScale().updateRange(r.getLetter(), newMin, newMax)) {
-                        JOptionPane.showMessageDialog(this,
-                                "could not apply range for " + r.getLetter() + " (check ordering vs other letters)");
-                        ok = false;
-                        break;
-                    }
+                    newMins[i] = Double.parseDouble(minFields[i].getText().trim());
+                    newMaxs[i] = Double.parseDouble(maxFields[i].getText().trim());
                 }
-                if (ok) {
+                if (!course.getGradeScale().applyAllRangeUpdates(newMins, newMaxs)) {
+                    JOptionPane.showMessageDialog(this,
+                            "Could not apply boundaries (ranges must stay ordered without overlap).");
+                } else {
                     grader.assignLetterGradesForCourse(course);
                     showCourseView(course);
                 }
@@ -843,11 +840,11 @@ public class Portal extends JFrame implements ActionListener {
         int passing = 0;
         for (Student s : course.getActiveStudents()) {
             String g = s.getLetterGrade();
-            if (g != null && !"F".equals(g)) {
+            if (g != null && !"F".equals(g) && !"D".equals(g)) {
                 passing++;
             }
         }
-        sb.append(String.format("Passing (grades above F): %d / %d (%.1f%%)",
+        sb.append(String.format("Passing (grades above D): %d / %d (%.1f%%)",
                 passing, st.activeCount, 100.0 * passing / st.activeCount));
 
         sb.append("</body></html>");

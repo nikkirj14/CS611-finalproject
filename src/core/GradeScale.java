@@ -145,6 +145,39 @@ public class GradeScale {
         return true;
     }
 
+    // apply every range at once so adjacent edits validate together
+    public boolean applyAllRangeUpdates(double[] newMins, double[] newMaxs) {
+        if (ranges == null || newMins == null || newMaxs == null) {
+            return false;
+        }
+        int n = ranges.size();
+        if (newMins.length != n || newMaxs.length != n) {
+            return false;
+        }
+        for (int i = 0; i < n; i++) {
+            if (newMins[i] > newMaxs[i]) {
+                return false;
+            }
+        }
+
+        double[][] backup = new double[n][2];
+        for (int i = 0; i < n; i++) {
+            GradeRange r = ranges.get(i);
+            backup[i][0] = r.getMin();
+            backup[i][1] = r.getMax();
+            r.setRange(newMins[i], newMaxs[i]);
+        }
+
+        if (!isValidScale()) {
+            for (int i = 0; i < n; i++) {
+                ranges.get(i).setRange(backup[i][0], backup[i][1]);
+            }
+            return false;
+        }
+        notifyObservers();
+        return true;
+    }
+
     // check if ranges stay ordered and not overlapping
     public boolean isValidScale() {
         if (ranges == null || ranges.isEmpty()) {
