@@ -4,17 +4,21 @@ Simple grading portal for courses, students, assignments, and grade scales.
 
 ## How to compile and run
 ---------------------------------------------------------------------------
-1. from project root, run: `./run.sh`
-2. to load saved course data on start: `./run.sh StoredData.csv`
+1. From project root, run: `./run.sh`
+2. To load saved course data on start: `./run.sh StoredData.csv`
 
 ## Files
 ---------------------------------------------------------------------------
 - `src/main/Main.java`: starts the app
+<br>
+
 - `src/gui/Portal.java`: main Swing window (menus, table, stats, chart panels, edit dialogs, save button)
 - `src/gui/FileHandler.java`: handles file chooser plus loading/saving course/weight csv files
 - `src/gui/LetterGradeBarChartPanel.java`: draws the letter-grade bar chart with plain Swing shape painting
 - `src/gui/StatsByStudentChartPanel.java`: chart panel for per-student stats visualization
 - `src/gui/StatsByAssignmentChartPanel.java`: chart panel for per-assignment stats visualization
+<br>
+
 - `src/core/CourseManager.java`: keeps track of all courses, lookup/removal, and loading prior courses
 - `src/core/Course.java`: course model (id/name, assignments, students, grade scale)
 - `src/core/Assignment.java`: assignment model (name, weight, max points, optional note)
@@ -33,6 +37,6 @@ Simple grading portal for courses, students, assignments, and grade scales.
 
 ## Notes
 ---------------------------------------------------------------------------
-1. grade scale changes use an observer so letter grades refresh automatically after boundary updates
-2. course stats are active student focused, and the top section includes both text summary + chart views
-3. grade scale changes are validated as a batch as opposed to our initial approach of letter grade by letter grade to avoid old ranges from causing incorrect invalidity
+1. Grade scale changes use an observer so letter grades refresh automatically after boundary updates
+2. Course stats are active student focused, and the top section includes both text summary + chart views
+3. Grade scale changes are validated as a batch as opposed to our initial approach of letter grade by letter grade to avoid old ranges from causing incorrect invalidity

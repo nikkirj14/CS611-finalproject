@@ -113,3 +113,51 @@ The project has multiple import/export interactions:
 ### Benefit
 
 Import, save, and export concerns are separated so each flow can be developed independently (i.e. single responsibility principle).
+
+---
+
+## Boundary editing is applied as a batch
+
+Originally, we implemented boundary updates and validation one row at a time. That caused a practical issue: users could type a valid overall set of ranges, but intermediate rows looked temporarily invalid and got rejected.
+
+We changed this to batch apply:
+
+- parse all edited min/max values first
+- apply all values together
+- validate once
+- rollback if invalid
+
+### Benefit
+
+The boundary dialog now behaves how expected: if the final set is valid and nonoverlapping, it applies cleanly.
+
+---
+
+## Curve to top student behavior
+
+For the top student curving, we wanted one click to shift boundaries appropriately, but our initial implementation caused repeated clicks on unchanged data keep shifting forever because it would always shift by the difference between 100 and the top student grade. The shifting would also cause the minimum of F (previously 0) to get shifted into a negative number.
+
+Design choice:
+
+- keep a ceiling based shift so repeated curve actions are stable on unchanged data
+- keep the lower end (`F` min at 0) so ranges remain intuitive to users
+
+### Tradeoff
+
+- **Pro:** stable user experience and safer repeated actions
+- **Con:** a little more logic complexity in `GradeScale` to handle edge cases
+
+---
+
+## Editable table cells vs modal dialogs
+
+We intentionally support direct table edits (assignment scores and notes) instead of forcing all edits through popups.
+
+### Why this was chosen
+
+For instructor workflows, inline editing is much faster when correcting many rows.
+
+### Tradeoff
+
+- **Pro:** fewer clicks and faster updates for adjustments
+- **Con:** table listeners need careful validation/recompute logic to avoid inconsistent state after invalid input
