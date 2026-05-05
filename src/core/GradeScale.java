@@ -66,13 +66,24 @@ public class GradeScale {
     // shift ranges by top score; keep highest letter max at 100 for later higher
     // scores
     public void shiftToTopScore(double topScore) {
-        double dif = 100 - topScore;
+        if (ranges == null || ranges.isEmpty()) {
+            return;
+        }
+        GradeRange aPlus = ranges.get(0);
+        double ceiling = aPlus.getMax();
+        double dif = ceiling - topScore;
+        if (dif < 0) {
+            return;
+        }
+        if (dif <= 1e-6) {
+            return;
+        }
         for (int i = 0; i < ranges.size(); i++) {
             GradeRange r = ranges.get(i);
             double oldMin = r.getMin();
             double oldMax = r.getMax();
             if (i == 0) {
-                r.setRange(oldMin - dif, 100);
+                r.setRange(oldMin - dif, topScore);
             } else {
                 r.setRange(oldMin - dif, oldMax - dif);
             }
@@ -96,6 +107,11 @@ public class GradeScale {
         }
         if (percent < 0) {
             return ranges.get(ranges.size() - 1).getLetter();
+        }
+        GradeRange topRange = ranges.get(0);
+        // raw final % can still be above the curved A+ max, treat as A+
+        if (percent > topRange.getMax() && percent <= 100.0) {
+            return topRange.getLetter();
         }
         // inclusive min/max so values exactly on a boundary still match (needed after
         // curve shift)

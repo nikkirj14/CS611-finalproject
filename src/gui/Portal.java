@@ -330,7 +330,7 @@ public class Portal extends JFrame implements ActionListener {
             JMenuItem importGrades = new JMenuItem("Import Grades");
             JMenuItem addAssignment = new JMenuItem("Add Assignment");
             JMenuItem removeAssignment = new JMenuItem("Remove Assignment");
-            JMenuItem adjustWeights = new JMenuItem("Adjust Weights");
+            JMenuItem adjustWeights = new JMenuItem("Adjust Assignment Weights");
             JMenuItem adjustBoundaries = new JMenuItem("Adjust Grade Boundaries");
             JMenuItem curveToTop = new JMenuItem("Curve Scale to Top Student");
             JMenuItem resetGradeScale = new JMenuItem("Reset Grade Scale to Default");
@@ -455,7 +455,10 @@ public class Portal extends JFrame implements ActionListener {
 
     DefaultTableModel tableModel = new DefaultTableModel(data, columns) {
         public boolean isCellEditable(int row, int column) {
-            // only assignment score columns editable
+            // only assignment score and notecolumns editable
+            if (column == 2) {
+                return true;
+            }
             return column >= 3 && column < assignments.size() + 3;
         }
     };
@@ -466,11 +469,19 @@ public class Portal extends JFrame implements ActionListener {
     tableModel.addTableModelListener(e -> {
         int row = e.getFirstRow();
         int col = e.getColumn();
-        if (col < 3 || col >= assignments.size() + 3) return;
-
         Student s = students.get(row);
-        Assignment a = assignments.get(col - 3);
         Object val = tableModel.getValueAt(row, col);
+
+        if (col == 2) {
+            s.setNote(val == null ? "" : val.toString());
+            return;
+        }
+
+        if (col < 3 || col >= assignments.size() + 3) {
+            return;
+        }
+
+        Assignment a = assignments.get(col - 3);
 
         try {
             double score = Double.parseDouble(val.toString().trim());
@@ -571,7 +582,7 @@ public class Portal extends JFrame implements ActionListener {
             panel.add(row);
         }
 
-        int result = JOptionPane.showConfirmDialog(this, panel, "Adjust Weights", JOptionPane.OK_CANCEL_OPTION);
+        int result = JOptionPane.showConfirmDialog(this, panel, "Adjust Assignment Weights", JOptionPane.OK_CANCEL_OPTION);
 
         if (result == JOptionPane.OK_OPTION) {
             try {
@@ -773,8 +784,8 @@ public class Portal extends JFrame implements ActionListener {
         int totalEnrolled = course.getStudents() != null ? course.getStudents().size() : 0;
         int inactive = totalEnrolled - st.activeCount;
         sb.append("<b>Course Stats (Active Only)</b><br/><br/>");
-        sb.append("Enrolled Active: ").append(st.activeCount).append(" / Inactive ").append(inactive)
-                .append("<br/><br/>");
+        sb.append("Enrolled: ").append(totalEnrolled).append(" · Active: ").append(st.activeCount)
+                .append(" · Inactive: ").append(inactive).append("<br/><br/>");
 
         if (st.activeCount == 0) {
             sb.append("No active students.</body></html>");
@@ -789,11 +800,11 @@ public class Portal extends JFrame implements ActionListener {
         int passing = 0;
         for (Student s : course.getActiveStudents()) {
             String g = s.getLetterGrade();
-            if (g != null && !"F".equals(g) && !"D".equals(g)) {
+            if (g != null && !"F".equals(g)) {
                 passing++;
             }
         }
-        sb.append(String.format("Passing: %d / %d (%.1f%%)",
+        sb.append(String.format("Passing (grades above F): %d / %d (%.1f%%)",
                 passing, st.activeCount, 100.0 * passing / st.activeCount));
 
         sb.append("</body></html>");
