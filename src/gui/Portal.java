@@ -57,6 +57,7 @@ public class Portal extends JFrame implements ActionListener {
 
     private JLabel headerCourseTitle;
     private JButton headerAssignmentStatsBtn;
+    private JButton headerDisplayStatsBtn;
     private JButton headerEditBtn;
     private JButton headerBackBtn;
     private FullWidthCenterHeaderBar topHeaderBar;
@@ -129,13 +130,13 @@ public class Portal extends JFrame implements ActionListener {
         headerCourseTitle = new JLabel();
         headerCourseTitle.setVisible(false);
 
-        headerAssignmentStatsBtn = new JButton("View Assignment Stats");
-        headerAssignmentStatsBtn.setVisible(false);
-        headerAssignmentStatsBtn.addActionListener(e -> {
-            if (currentCourse != null) {
-                showAssignmentStatsDialog(currentCourse);
-            }
-        });
+        // headerAssignmentStatsBtn = new JButton("View Assignment Stats");
+        // headerAssignmentStatsBtn.setVisible(false);
+        // headerAssignmentStatsBtn.addActionListener(e -> {
+        //     if (currentCourse != null) {
+        //         showAssignmentStatsDialog(currentCourse);
+        //     }
+        // });
 
         headerEditBtn = new JButton("Edit Course");
         headerEditBtn.setVisible(false);
@@ -145,12 +146,19 @@ public class Portal extends JFrame implements ActionListener {
             }
         });
 
-        //TODO: ADD SAVE GRADES BUTTON
+        headerDisplayStatsBtn = new JButton("View Stats");
+        headerDisplayStatsBtn.setVisible(false);
+        headerDisplayStatsBtn.addActionListener(e -> {
+            if (currentCourse != null) {
+                showCourseStatsMenu(headerDisplayStatsBtn, currentCourse);
+            }
+        });
 
         JPanel westHeader = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
         westHeader.setOpaque(false);
-        westHeader.add(headerAssignmentStatsBtn);
+        // westHeader.add(headerAssignmentStatsBtn);
         westHeader.add(headerEditBtn);
+        westHeader.add(headerDisplayStatsBtn);
 
         headerBackBtn = new JButton("Home");
         headerBackBtn.setVisible(false);
@@ -302,7 +310,8 @@ public class Portal extends JFrame implements ActionListener {
 
     private void setCourseHeaderVisible(boolean visible) {
         headerCourseTitle.setVisible(visible);
-        headerAssignmentStatsBtn.setVisible(visible);
+        // headerAssignmentStatsBtn.setVisible(visible);
+        headerDisplayStatsBtn.setVisible(visible);
         headerEditBtn.setVisible(visible);
         headerBackBtn.setVisible(visible);
         if (topHeaderBar != null) {
@@ -425,6 +434,88 @@ public class Portal extends JFrame implements ActionListener {
 
         editMenu.show(anchor, 0, anchor.getHeight());
     }
+
+    private void showCourseStatsMenu(JButton anchor, Course course) {
+        JPopupMenu displayMenu = new JPopupMenu();
+        JMenuItem byAssignment = new JMenuItem("By Assignment");
+        JMenuItem byStudent = new JMenuItem("By Student");
+
+        byAssignment.addActionListener(e -> {
+                // displayAssignmentSelectionDialog(course);
+            });
+
+        byStudent.addActionListener(e -> {
+                displayStudentSelectionDialog(course);
+             });
+        
+        displayMenu.add(byAssignment);
+        displayMenu.add(byStudent);
+
+        displayMenu.show(anchor, 0, anchor.getHeight());
+    }
+
+    private void displayStudentSelectionDialog(Course course) {
+        DefaultListModel<String> model = new DefaultListModel<>();
+        List<Student> students = course.getActiveStudents();
+        if (students.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "No active students with scores to display.");
+            return; 
+        }
+        List<Assignment> assignments = course.getAssignments();
+        if (assignments.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "No assignments with scores to display.");
+            return; 
+        }
+
+        for (Student s : students) {
+            model.addElement(s.getName());
+        }
+
+        JList<String> list = new JList<>(model);
+        list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+
+        JDialog dialog = new JDialog(this, "Select Student", true);
+        dialog.setLayout(new BorderLayout());
+        dialog.add(new JScrollPane(list), BorderLayout.CENTER);
+
+        list.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent e) {
+                if (e.getClickCount() == 2) {
+                    int index = list.getSelectedIndex();
+                    if (index >= 0) {
+                        Student selected = students.get(index);
+                        dialog.dispose();
+                        
+                        showStudentGraph(selected, assignments);
+                    }
+                }
+            }
+        });
+
+        dialog.setSize(300, 400);
+        dialog.setLocationRelativeTo(this);
+        dialog.setVisible(true);
+    }
+
+    private void showStudentGraph(Student student, List<Assignment> assignments) {
+        StatsByStudentChartPanel panel = new StatsByStudentChartPanel(student, assignments);
+
+        JDialog dialog = new JDialog(this, student.getName() + " - Assignment Scores", true);
+        dialog.setLayout(new BorderLayout());
+        dialog.add(panel, BorderLayout.CENTER);
+
+        dialog.setSize(600, 300); // or use pack() if preferred
+        dialog.setLocationRelativeTo(this);
+        dialog.setVisible(true);
+        System.out.println("Displaying graph for student: " + student.getName());
+    }
+
+    // private void displayAssignmentByStudent(Course course) {
+    //     Stats st = new Stats();
+    //     st.statsByStudent(course);
+    //     AssignmentStatsDialog dialog = new AssignmentStatsDialog(this, st, course);
+    //     dialog.setVisible(true);
+    // }
 
     // show course detail view with student grade table
     private void showCourseView(Course course) {
@@ -849,7 +940,7 @@ public class Portal extends JFrame implements ActionListener {
                 passing++;
             }
         }
-        sb.append(String.format("Passing (grades above D): %d / %d (%.1f%%)",
+        sb.append(String.format("Passing: %d / %d (%.1f%%)",
                 passing, st.activeCount, 100.0 * passing / st.activeCount));
 
         sb.append("</body></html>");
