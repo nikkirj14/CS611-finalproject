@@ -518,7 +518,7 @@ public class Portal extends JFrame implements ActionListener {
     // }
 
     // show course detail view with student grade table
-    private void showCourseView(Course course) {
+ private void showCourseView(Course course) {
     this.currentCourse = course;
     ensureScaleLetterRefresh(course);
     courseDisplay.removeAll();
@@ -559,6 +559,8 @@ public class Portal extends JFrame implements ActionListener {
 
     // build table columns
     final List<Assignment> assignments = course.getAssignments();
+    final List<Student> students = course.getStudents();
+
     String[] columns = new String[assignments.size() + 5];
     columns[0] = "Student";
     columns[1] = "Active Status";
@@ -577,8 +579,6 @@ public class Portal extends JFrame implements ActionListener {
     columns[columns.length - 2] = "Final %";
     columns[columns.length - 1] = "Grade";
 
-    // all students in roster
-    final List<Student> students = course.getStudents();
     Object[][] data = new Object[students.size()][columns.length];
     for (int i = 0; i < students.size(); i++) {
         Student s = students.get(i);
@@ -594,10 +594,7 @@ public class Portal extends JFrame implements ActionListener {
 
     DefaultTableModel tableModel = new DefaultTableModel(data, columns) {
         public boolean isCellEditable(int row, int column) {
-            // only assignment score and notecolumns editable
-            if (column == 2) {
-                return true;
-            }
+            if (column == 2) return true;
             return column >= 3 && column < assignments.size() + 3;
         }
     };
@@ -616,18 +613,14 @@ public class Portal extends JFrame implements ActionListener {
             return;
         }
 
-        if (col < 3 || col >= assignments.size() + 3) {
-            return;
-        }
+        if (col < 3 || col >= assignments.size() + 3) return;
 
         Assignment a = assignments.get(col - 3);
-
         try {
             double score = Double.parseDouble(val.toString().trim());
             s.setScore(a.getName(), score);
             grader.calculateFinalPercentsForCourse(course);
             grader.assignLetterGradesForCourse(course);
-
             tableModel.setValueAt(String.format("%.1f%%", s.getFinalPercent()), row, columns.length - 2);
             tableModel.setValueAt(s.getLetterGrade(), row, columns.length - 1);
         } catch (NumberFormatException ex) {
@@ -636,13 +629,40 @@ public class Portal extends JFrame implements ActionListener {
         }
     });
 
-    courseDisplay.add(new JScrollPane(table), BorderLayout.CENTER);
+    // sort button above table, right aligned
+    JButton sortBtn = new JButton("Sort");
+    sortBtn.addActionListener(ev -> {
+        String[] options = {"By Name", "By Final Grade"};
+        String choice = (String) JOptionPane.showInputDialog(this,
+                "Sort students by:", "Sort", JOptionPane.PLAIN_MESSAGE,
+                null, options, options[0]);
+        if (choice == null) return;
+        if (choice.equals("By Name")) {
+            students.sort((a, b) -> a.getName().compareToIgnoreCase(b.getName()));
+        } else {
+            students.sort((a, b) -> Double.compare(b.getFinalPercent(), a.getFinalPercent()));
+        }
+        showCourseView(course);
+    });
+
+    JPanel tableTopBar = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+    tableTopBar.add(sortBtn);
+
+    JPanel tableWrapper = new JPanel(new BorderLayout());
+    tableWrapper.add(tableTopBar, BorderLayout.NORTH);
+    tableWrapper.add(new JScrollPane(table), BorderLayout.CENTER);
+
+    courseDisplay.add(tableWrapper, BorderLayout.CENTER);
 
     centerPanel.removeAll();
     centerPanel.add(courseDisplay, BorderLayout.CENTER);
     centerPanel.revalidate();
     centerPanel.repaint();
     }
+
+
+
+
 
     // add assignment dialog
     private void addAssignment(Course course) {
