@@ -1,5 +1,7 @@
-// grader class for final grade math
-
+/*
+ * Grader class for final grade math and letter grade assignment, including top score shifting.
+ * It provides methods to calculate final percents, assign letter grades, and apply top score shifts
+ */
 package core;
 
 public class Grader {

@@ -1,5 +1,7 @@
-// file helper for csv import flow
-
+/*
+* FileHandler class for handling file operations related to CSV import flow.
+* It provides methods to import a CSV file, parse student scores and course weights from the file, validate the file format, and save course data back to a CSV file.
+*/
 package gui;
 
 import java.io.BufferedReader;

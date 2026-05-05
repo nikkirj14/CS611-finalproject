@@ -1,5 +1,6 @@
-// manages the set of courses and handles basic lookup/add/remove
-
+/*
+ * CourseManager manages the set of courses and handles basic lookup/add/remove operations.
+*/
 package core;
 
 import java.util.ArrayList;

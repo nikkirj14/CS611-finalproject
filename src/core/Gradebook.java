@@ -1,5 +1,7 @@
-// gradebook class to manage multiple courses
-
+/*
+ * Gradebook class to manage multiple courses and provide methods for course creation and retrieval.
+ * It serves as the main entry point for managing the courses in the system.
+ */
 package core;
 
 import java.util.ArrayList;

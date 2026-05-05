@@ -1,5 +1,7 @@
-// assignment class
-
+/*
+ * Assignment class represents an assignment in a course, with name, weight, max points, and optional note.
+ * It is used to store the assignment data for each course and to calculate student scores.
+*/
 package core;
 
 public class Assignment {

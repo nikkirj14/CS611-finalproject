@@ -1,5 +1,6 @@
-// factory for creating courses
-
+/*
+    CourseFactory handles object creation of courses separately from the rest of the system, so that we can easily port course setups without copying students or other data.
+*/
 package core;
 
 import java.util.ArrayList;

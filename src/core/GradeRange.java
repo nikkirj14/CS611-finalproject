@@ -1,4 +1,6 @@
-// grade range class for one letter bucket
+/*
+ * GradeRange class for one letter bucket with min and max percents. It is used to define the letter grade ranges for a course and to determine the letter grade for a given percent score.
+ */
 
 package core;
 

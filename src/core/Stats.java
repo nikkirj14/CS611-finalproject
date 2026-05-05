@@ -1,4 +1,6 @@
-// computes summary stats used by the portal charts and labels
+/*
+ * Stats class for computing summary stats used by the portal charts and labels
+ */
 
 package core;
 

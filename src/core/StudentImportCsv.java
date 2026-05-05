@@ -1,4 +1,7 @@
-// reads a student grade csv and merges it into one course
+/* 
+* StudentImportCsv class for reading a student grade csv and merging it into one course
+* The csv should have a header row with "studentId, name, email" followed by assignment names
+*/
 
 package core;
 

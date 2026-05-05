@@ -1,5 +1,6 @@
-
-// bar chart for displaying a student's scores on all assignments in a course
+/* 
+ * StatsByStudentChartPanel bar chart for displaying a student's scores on all assignments in a course
+*/
 package gui;
 
 import core.Assignment;

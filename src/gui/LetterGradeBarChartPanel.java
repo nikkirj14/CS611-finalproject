@@ -1,4 +1,6 @@
-// bar chart for letter grade counts
+/*
+* LetterGradeBarChartPanel bar chart for letter grade counts in the stats by assignment panel. It takes a map of letter to count and an ordered list of letters to display, and draws a bar chart with the counts for each letter grade.
+*/
 
 package gui;
 

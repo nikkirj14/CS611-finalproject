@@ -1,5 +1,7 @@
-// course class for assignments, students, and grade scale
-
+/*
+ * Course class represents a course with a set of assignments, students, and a grade scale.
+ * It is used to manage the course data and handle basic operations.
+ */
 package core;
 
 import java.util.ArrayList;

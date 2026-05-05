@@ -1,4 +1,6 @@
-// grade scale class for letter grade boundaries
+/*
+ * GradeScale class for letter grade boundaries and top score shifting. It defines the letter grade ranges for a course and provides methods to get the letter grade for a given percent score, update the ranges, and shift the ranges based on the top score.
+ */
 
 package core;
 

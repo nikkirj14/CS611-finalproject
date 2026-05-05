@@ -1,4 +1,7 @@
-// writes course roster and grades to a csv file
+/*
+ * CourseResultsCsv handles exporting a course's results to a csv file, with one line per student and one column per assignment.
+ */
+
 
 package core;
 

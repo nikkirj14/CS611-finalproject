@@ -1,4 +1,6 @@
-// observer that reapplies letter grades when the scale moves
+/*
+ * ScaleLetterRefresh class for refreshing letter grades when the grade scale changes.
+ */
 
 package core;
 

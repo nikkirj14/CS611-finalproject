@@ -1,5 +1,6 @@
-// shows one assignment's score distribution by mapping scores into letter buckets
-
+/*
+* StatsByAssignmentChartPanel shows one assignment's score distribution by mapping scores into letter buckets and showing a bar chart of the counts for each letter grade. It takes a list of scores and the course's letter grade ranges, and builds the distribution for the chart.
+*/
 package gui;
 
 

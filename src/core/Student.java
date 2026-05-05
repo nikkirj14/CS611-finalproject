@@ -1,4 +1,6 @@
-// student class for identity and grade data
+/*
+ * Student class for identity and grade data. It represents a student with their ID, name, email, active status, assignment scores, notes, final percent, and letter grade. It provides methods to set and get these attributes.
+ */
 
 package core;
 

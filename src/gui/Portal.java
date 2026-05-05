@@ -1,4 +1,6 @@
-// swing portal window for basic actions
+/*
+* Swing portal window for basic actions like viewing courses, adding courses, and importing grades. It also contains the course view with the student grade table and stats/graphs for the course.
+*/
 package gui;
 
 import gui.FileHandler;
