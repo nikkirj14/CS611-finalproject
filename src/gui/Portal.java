@@ -30,6 +30,7 @@ import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -55,6 +56,7 @@ public class Portal extends JFrame implements ActionListener {
     private HashSet<Course> scaleLetterRefreshDone;
 
     private JLabel headerCourseTitle;
+    private JLabel headerHomeTitle;
     private JButton headerAssignmentStatsBtn;
     private JButton headerDisplayStatsBtn;
     private JButton headerEditBtn;
@@ -129,6 +131,10 @@ public class Portal extends JFrame implements ActionListener {
         headerCourseTitle = new JLabel();
         headerCourseTitle.setVisible(false);
 
+        headerHomeTitle = new JLabel("GradeManager");
+        headerHomeTitle.setFont(headerHomeTitle.getFont().deriveFont(Font.BOLD, 24f));
+        headerHomeTitle.setVisible(true);
+
         // headerAssignmentStatsBtn = new JButton("View Assignment Stats");
         // headerAssignmentStatsBtn.setVisible(false);
         // headerAssignmentStatsBtn.addActionListener(e -> {
@@ -155,6 +161,8 @@ public class Portal extends JFrame implements ActionListener {
 
         JPanel westHeader = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
         westHeader.setOpaque(false);
+        westHeader.add(headerHomeTitle);
+        westHeader.add(Box.createHorizontalStrut(10));
         // westHeader.add(headerAssignmentStatsBtn);
         westHeader.add(headerEditBtn);
         westHeader.add(headerDisplayStatsBtn);
@@ -267,35 +275,23 @@ public class Portal extends JFrame implements ActionListener {
 
         JPanel listPanel = new JPanel();
         listPanel.setLayout(new BoxLayout(listPanel, BoxLayout.Y_AXIS));
+        listPanel.setBorder(BorderFactory.createEmptyBorder(18, 16, 18, 16));
 
         List<Course> courses = courseManager.getCourses();
         for (Course c : courses) {
-            JPanel row = new JPanel(new GridBagLayout());
-            row.setBorder(BorderFactory.createEmptyBorder(8, 10, 8, 10));
-            row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 76));
+            JButton courseBtn = buildCourseHomeButton(c);
+            courseBtn.addActionListener(ev -> showCourseView(c));
+            courseBtn.setAlignmentX(Component.LEFT_ALIGNMENT);
+            courseBtn.setFocusPainted(false);
+            courseBtn.setOpaque(true);
+            courseBtn.setBackground(new Color(198, 211, 238));
+            courseBtn.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createLineBorder(new Color(170, 183, 210)),
+                    BorderFactory.createEmptyBorder(14, 18, 14, 18)));
+            courseBtn.setMaximumSize(new Dimension(Integer.MAX_VALUE, 68));
 
-            JLabel label = new JLabel(courseHomeRowHtml(c));
-            JButton openBtn = new JButton("Open");
-            openBtn.addActionListener(ev -> showCourseView(c));
-
-            GridBagConstraints gbc = new GridBagConstraints();
-            gbc.gridy = 0;
-            gbc.fill = GridBagConstraints.BOTH;
-            gbc.weightx = 1.0;
-            gbc.gridx = 0;
-            row.add(Box.createHorizontalGlue(), gbc);
-            gbc.gridx = 1;
-            gbc.weightx = 0;
-            gbc.anchor = GridBagConstraints.CENTER;
-            row.add(label, gbc);
-            gbc.gridx = 2;
-            gbc.weightx = 1.0;
-            JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
-            right.setOpaque(false);
-            right.add(openBtn);
-            row.add(right, gbc);
-
-            listPanel.add(row);
+            listPanel.add(courseBtn);
+            listPanel.add(Box.createVerticalStrut(16));
         }
 
         centerPanel.add(new JScrollPane(listPanel), BorderLayout.CENTER);
@@ -304,6 +300,7 @@ public class Portal extends JFrame implements ActionListener {
     }
 
     private void setCourseHeaderVisible(boolean visible) {
+        headerHomeTitle.setVisible(!visible);
         headerCourseTitle.setVisible(visible);
         // headerAssignmentStatsBtn.setVisible(visible);
         headerDisplayStatsBtn.setVisible(visible);
@@ -367,6 +364,34 @@ public class Portal extends JFrame implements ActionListener {
                 + htmlEscape(course.getCourseId()) + " &nbsp;&nbsp; <br/>"
                 + "Enrolled: " + enrolled + " &nbsp;&middot;&nbsp; Active: " + active
                 + "</div></html>";
+    }
+
+    private JButton buildCourseHomeButton(Course course) {
+        int enrolled = course.getStudents() != null ? course.getStudents().size() : 0;
+        int active = course.getActiveStudents().size();
+        int assignments = course.getAssignments() != null ? course.getAssignments().size() : 0;
+
+        JButton btn = new JButton();
+        btn.setLayout(new BorderLayout());
+
+        JLabel left = new JLabel("<html><b>Course:</b> " + htmlEscape(course.getCourseName())
+                + " &nbsp;&nbsp; <b>ID:</b> " + htmlEscape(course.getCourseId()) + "</html>");
+        JLabel right = new JLabel("Enrolled: " + enrolled
+                + "  ·  Active: " + active
+                + "  ·  Assignments: " + assignments
+                + "   \u203A");
+        right.setHorizontalAlignment(SwingConstants.RIGHT);
+
+        JPanel leftWrap = new JPanel(new BorderLayout());
+        leftWrap.setOpaque(false);
+        leftWrap.add(left, BorderLayout.WEST);
+        JPanel rightWrap = new JPanel(new BorderLayout());
+        rightWrap.setOpaque(false);
+        rightWrap.add(right, BorderLayout.EAST);
+
+        btn.add(leftWrap, BorderLayout.WEST);
+        btn.add(rightWrap, BorderLayout.EAST);
+        return btn;
     }
 
     private void showEditCourseMenu(JButton anchor, Course course) {
