@@ -1,4 +1,4 @@
-courseId,courseName, assignmentName,weight,maxPoints,note
+courseId,courseName,assignmentName,weight,maxPoints,note
 CS611,Introduction to Software Engineering,Assignment 1,20.00,100.00,
 CS611,Introduction to Software Engineering,Assignment 2,20.00,100.00,
 CS611,Introduction to Software Engineering,Midterm,25.00,100.00,

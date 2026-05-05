@@ -33,8 +33,11 @@ public class StatsByAssignmentChartPanel extends JPanel{
 
         HashMap<String, Integer> counts = buildDistribution(scores, ranges);
 
-        LetterGradeBarChartPanel chartPanel =
-                new LetterGradeBarChartPanel(counts, new ArrayList<>(ranges));
+        Color barColor = new Color(84,146,125);
+
+        LetterGradeBarChartPanel chartPanel =    
+            new LetterGradeBarChartPanel(counts, new ArrayList<>(ranges), barColor);
+
 
         add(chartPanel, BorderLayout.CENTER);
 
@@ -57,7 +60,6 @@ public class StatsByAssignmentChartPanel extends JPanel{
         return counts;
     }
 
-    //TODO: FIX THIS: this is duplicated
     private String toLetter(double score, List<GradeRange> ranges) {
         for (GradeRange r : ranges) {
             if ( score >= r.getMin() && score < r.getMax()) { 

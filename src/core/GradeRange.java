@@ -11,12 +11,18 @@ public class GradeRange {
     // constructor
     public GradeRange(String letter, double min, double max) {
         this.letter = letter;
+        if (min < 0.0) {
+            min = 0.0;
+        }
         this.minPercent = min;
         this.maxPercent = max;
     }
 
     // update min and max for this range
     public void setRange(double min, double max) {
+        if (min < 0.0) {
+            min = 0.0;
+        }
         this.minPercent = min;
         this.maxPercent = max;
     }

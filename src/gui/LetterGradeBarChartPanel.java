@@ -20,10 +20,12 @@ public class LetterGradeBarChartPanel extends JPanel {
 
     private HashMap<String, Integer> counts;
     private ArrayList<String> letterOrder;
+    private Color barColor;
 
-    public LetterGradeBarChartPanel(HashMap<String, Integer> counts, ArrayList<GradeRange> ranges) {
+    public LetterGradeBarChartPanel(HashMap<String, Integer> counts, ArrayList<GradeRange> ranges, Color barColor) {
         this.counts = counts != null ? counts : new HashMap<String, Integer>();
         this.letterOrder = new ArrayList<String>();
+        this.barColor = barColor;
         if (ranges != null) {
             for (int i = 0; i < ranges.size(); i++) {
                 letterOrder.add(ranges.get(i).getLetter());
@@ -71,8 +73,8 @@ public class LetterGradeBarChartPanel extends JPanel {
         int slotW = innerW / n;
         int barW = Math.max(10, slotW - 6);
 
-        Color barFill = new Color(70, 130, 200);
         g2.setStroke(new BasicStroke(1f));
+        g2.setColor(barColor);
 
         for (int i = 0; i < n; i++) {
             String letter = letterOrder.get(i);
@@ -83,7 +85,7 @@ public class LetterGradeBarChartPanel extends JPanel {
             int x = padL + i * slotW + (slotW - barW) / 2;
             int y = chartBottom - barH;
 
-            g2.setColor(barFill);
+            g2.setColor(barColor);
             g2.fillRect(x, y, barW, barH);
             g2.setColor(Color.DARK_GRAY);
             g2.drawRect(x, y, barW, barH);

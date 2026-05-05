@@ -571,7 +571,7 @@ public class Portal extends JFrame implements ActionListener {
     statsRow.add(statsLabel);
 
     LetterGradeBarChartPanel letterChart = new LetterGradeBarChartPanel(rosterStats.letterCounts,
-            course.getGradeScale().getRanges());
+            course.getGradeScale().getRanges(), new Color(	54, 117, 136));
     JPanel chartWrap = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
     chartWrap.setAlignmentX(Component.CENTER_ALIGNMENT);
     chartWrap.setBorder(BorderFactory.createTitledBorder("Letter Counts"));
